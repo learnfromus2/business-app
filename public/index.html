@@ -665,6 +665,82 @@
             }
         }
         
+        // Enhanced error handling for API calls
+        async function makeApiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, options);
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    
+                    // Handle specific database connection errors
+                    if (response.status === 503 && errorData.code === 'DB_UNAVAILABLE') {
+                        showDatabaseError();
+                        throw new Error('Database temporarily unavailable');
+                    }
+                    
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API call failed:', error);
+                
+                // Handle network errors
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showNetworkError();
+                }
+                
+                throw error;
+            }
+        }
+        
+        // Show database connection error
+        function showDatabaseError() {
+            const alertContainer = document.getElementById('alertContainer') || document.body;
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-warning alert-dismissible fade show';
+            errorDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px;';
+            errorDiv.innerHTML = `
+                <i class="fas fa-database me-2"></i>
+                <strong>Database Connection Issue</strong><br>
+                The database is temporarily unavailable. Please check your internet connection and try again.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            alertContainer.appendChild(errorDiv);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 10000);
+        }
+        
+        // Show network error
+        function showNetworkError() {
+            const alertContainer = document.getElementById('alertContainer') || document.body;
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+            errorDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px;';
+            errorDiv.innerHTML = `
+                <i class="fas fa-wifi me-2"></i>
+                <strong>Network Error</strong><br>
+                Unable to connect to the server. Please check your internet connection.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            alertContainer.appendChild(errorDiv);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 10000);
+        }
+        
         // Setup role-based access control
         function setupRoleBasedAccess(user) {
             const userRole = user.role.toLowerCase();

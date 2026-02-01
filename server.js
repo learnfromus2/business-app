@@ -11,23 +11,85 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/business_management', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.error('MongoDB connection error:', err));
+// Global variable to track database connection status
+let isDbConnected = false;
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/editing', require('./routes/editing'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/clients', require('./routes/clients'));
-app.use('/api/salary', require('./routes/salary'));
-app.use('/api/transportation', require('./routes/transportation'));
-app.use('/api/dashboard', require('./routes/dashboard'));
+// Enhanced Database connection with better error handling
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/business_management', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      bufferMaxEntries: 0, // Disable mongoose buffering
+      bufferCommands: false, // Disable mongoose buffering
+    });
+    
+    isDbConnected = true;
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    
+    // Handle connection events
+    mongoose.connection.on('error', (err) => {
+      console.error('❌ MongoDB connection error:', err);
+      isDbConnected = false;
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('⚠️ MongoDB disconnected');
+      isDbConnected = false;
+    });
+    
+    mongoose.connection.on('reconnected', () => {
+      console.log('✅ MongoDB reconnected');
+      isDbConnected = true;
+    });
+    
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error.message);
+    isDbConnected = false;
+    
+    // Don't exit the process, continue with limited functionality
+    console.log('⚠️ Server will continue with limited functionality (no database)');
+    
+    // Retry connection after 30 seconds
+    setTimeout(connectDB, 30000);
+  }
+};
+
+// Connect to database
+connectDB();
+
+// Middleware to check database connection
+const checkDbConnection = (req, res, next) => {
+  if (!isDbConnected) {
+    return res.status(503).json({
+      error: 'Database temporarily unavailable',
+      message: 'Please check your internet connection and try again',
+      code: 'DB_UNAVAILABLE'
+    });
+  }
+  next();
+};
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    database: isDbConnected ? 'connected' : 'disconnected',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Routes with database connection check
+app.use('/api/auth', checkDbConnection, require('./routes/auth'));
+app.use('/api/orders', checkDbConnection, require('./routes/orders'));
+app.use('/api/editing', checkDbConnection, require('./routes/editing'));
+app.use('/api/users', checkDbConnection, require('./routes/users'));
+app.use('/api/clients', checkDbConnection, require('./routes/clients'));
+app.use('/api/salary', checkDbConnection, require('./routes/salary'));
+app.use('/api/transportation', checkDbConnection, require('./routes/transportation'));
+app.use('/api/dashboard', checkDbConnection, require('./routes/dashboard'));
 
 // Test endpoint to check database data
 app.get('/api/test/data', async (req, res) => {
