@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Salary Management - Business Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/mobile-nav.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        
+        /* Hamburger Menu Button (Mobile Only) */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .hamburger-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .hamburger-btn i {
+            font-size: 1.2rem;
+            color: #1e293b;
+            transition: transform 0.2s ease;
+        }
+        
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .mobile-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+        }
+        
+        .sidebar-brand i {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item {
+            margin: 2px 12px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        
+        .nav-link.active {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .dashboard-content {
+            padding: 32px;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .top-header {
+                padding: 16px 20px;
+                padding-left: 70px;
+            }
+            
+            .dashboard-content {
+                padding: 20px 16px;
+            }
+            
+            .page-title {
+                font-size: 1.25rem;
+            }
+            
+            .user-menu {
+                padding: 6px 8px;
+                gap: 8px;
+            }
+            
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+            
+            .user-menu div {
+                display: none;
+            }
+            
+            /* Mobile salary card optimizations */
+            .salary-card {
+                margin-bottom: 12px;
+                padding: 16px;
+            }
+            
+            .employee-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .employee-name {
+                font-size: 1rem;
+            }
+            
+            .row > div {
+                margin-bottom: 12px;
+            }
+            
+            .pay-btn {
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+            
+            .accuracy-rating {
+                flex-wrap: wrap;
+            }
+        }
+        
+        /* Prevent body scroll when mobile menu is open */
+        body.mobile-menu-open {
+            overflow: hidden;
+        }
+        
+        /* Salary specific styles */
+        .salary-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .salary-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .employee-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .employee-name {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+        
+        .employee-role {
+            background: #eff6ff;
+            color: #3b82f6;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-left: auto;
+        }
+        
+        .salary-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-partial {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .pay-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .pay-btn:hover {
+            background: #059669;
+        }
+        
+        .pay-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        
+        .accuracy-rating {
+            display: flex;
+            gap: 2px;
+            margin-top: 8px;
+        }
+        
+        .star {
+            color: #fbbf24;
+            font-size: 0.875rem;
+        }
+        
+        .star.empty {
+            color: #e5e7eb;
+        }
+        
+        .notification-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hamburger Menu Button (Mobile Only) -->
+    <button class="hamburger-btn" id="hamburgerMenu" aria-label="Toggle navigation">
+        <i class="fas fa-bars" id="hamburgerIcon"></i>
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <i class="fas fa-business-time"></i>
+                <span>Business Manager</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav" style="padding: 20px 0;" id="sidebarNav">
+            <!-- Navigation will be loaded based on role -->
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="page-title">Salary Management</div>
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.875rem;" id="userName">Loading...</div>
+                    <div style="font-size: 0.75rem; color: #64748b;" id="userRole">Loading...</div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="salary-card text-center">
+                        <h4 style="color: #10b981;" id="totalPaid">₹45,000</h4>
+                        <p class="mb-0" style="color: #64748b;">Total Paid</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="salary-card text-center">
+                        <h4 style="color: #f59e0b;" id="totalPending">₹25,000</h4>
+                        <p class="mb-0" style="color: #64748b;">Total Pending</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="salary-card text-center">
+                        <h4 style="color: #3b82f6;" id="totalEmployees">8</h4>
+                        <p class="mb-0" style="color: #64748b;">Total Employees</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="salary-card text-center">
+                        <h4 style="color: #ef4444;" id="pendingApprovals">3</h4>
+                        <p class="mb-0" style="color: #64748b;">Pending Approvals</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Employee Salary List -->
+            <div class="row">
+                <div class="col-12">
+                    <h4 class="mb-3">Employee Salaries & Performance</h4>
+                    <div id="salaryList">
+                        <!-- Salary cards will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Payment Confirmation Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to pay salary to <strong id="paymentEmployeeName"></strong>?</p>
+                    <div class="alert alert-info">
+                        <strong>Amount:</strong> ₹<span id="paymentAmount"></span><br>
+                        <strong>Type:</strong> <span id="paymentType"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="confirmPayment()">Confirm Payment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Salary data will be loaded from database
+        
+        let currentPaymentEmployee = null;
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadNavigation();
+            loadSalaryData();
+            initializeMobileNavigation();
+        });
+        
+        // Initialize mobile navigation
+        function initializeMobileNavigation() {
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            
+            if (!hamburgerMenu || !sidebar || !mobileOverlay) return;
+            
+            // Toggle sidebar on hamburger click
+            hamburgerMenu.addEventListener('click', function() {
+                const isOpen = sidebar.classList.contains('mobile-open');
+                
+                if (isOpen) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+            
+            // Close sidebar when overlay is clicked
+            mobileOverlay.addEventListener('click', closeMobileMenu);
+            
+            // Close sidebar when navigation link is clicked (mobile only)
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('.nav-link') && window.innerWidth <= 768) {
+                    closeMobileMenu();
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeMobileMenu();
+                }
+            });
+            
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+                    closeMobileMenu();
+                }
+            });
+            
+            function openMobileMenu() {
+                sidebar.classList.add('mobile-open');
+                mobileOverlay.classList.add('active');
+                hamburgerIcon.className = 'fas fa-times';
+                document.body.classList.add('mobile-menu-open');
+            }
+            
+            function closeMobileMenu() {
+                sidebar.classList.remove('mobile-open');
+                mobileOverlay.classList.remove('active');
+                hamburgerIcon.className = 'fas fa-bars';
+                document.body.classList.remove('mobile-menu-open');
+            }
+        }
+        
+        // Check authentication and setup role-based access
+        function checkAuth() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userData);
+                updateUserInfo(user);
+                setupRoleBasedAccess(user);
+            } catch (error) {
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Setup role-based access control
+        function setupRoleBasedAccess(user) {
+            const userRole = user.role.toLowerCase();
+            
+            if (userRole !== 'owner') {
+                // Change page title and content for non-owners
+                document.querySelector('.page-title').textContent = 'My Payments';
+                document.querySelector('h4').textContent = 'My Payment History & Status';
+                
+                // Hide overall stats and show personal stats
+                modifyStatsForRole(user);
+            }
+        }
+        
+        // Load navigation based on user role
+        function loadNavigation() {
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const sidebarNav = document.getElementById('sidebarNav');
+            
+            let navItems = [];
+            
+            // Add navigation items based on role
+            navItems.push({
+                href: 'index.html',
+                icon: 'fas fa-home',
+                text: 'Home',
+                active: false
+            });
+            
+            if (userRole === 'owner' || userRole === 'worker' || userRole === 'transporter_worker' || userRole === 'worker_editor' || userRole === 'editor_worker') {
+                navItems.push({
+                    href: 'orders.html',
+                    icon: 'fas fa-box',
+                    text: 'Orders',
+                    active: false
+                });
+            }
+            
+            if (userRole === 'owner' || userRole === 'editor' || userRole === 'worker_editor') {
+                navItems.push({
+                    href: 'editing.html',
+                    icon: 'fas fa-video',
+                    text: 'Editing Projects',
+                    active: false
+                });
+            }
+            
+            if (userRole === 'owner' || userRole === 'transporter' || userRole === 'transporter_worker') {
+                navItems.push({
+                    href: 'transportation.html',
+                    icon: 'fas fa-truck',
+                    text: 'Transportation',
+                    active: false
+                });
+            }
+            
+            // Salary is available for all roles
+            navItems.push({
+                href: 'salary.html',
+                icon: 'fas fa-money-bill-wave',
+                text: 'Salary Management',
+                active: true
+            });
+            
+            // Owner-only sections
+            if (userRole === 'owner') {
+                navItems.push({
+                    href: 'clients.html',
+                    icon: 'fas fa-users',
+                    text: 'Clients',
+                    active: false
+                });
+                navItems.push({
+                    href: 'workers.html',
+                    icon: 'fas fa-hard-hat',
+                    text: 'Workers & Editors',
+                    active: false
+                });
+            }
+            
+            // Generate navigation HTML
+            sidebarNav.innerHTML = navItems.map(item => `
+                <div class="nav-item">
+                    <a href="${item.href}" class="nav-link ${item.active ? 'active' : ''}">
+                        <i class="${item.icon}"></i>
+                        <span>${item.text}</span>
+                    </a>
+                </div>
+            `).join('');
+        }
+        
+        // Modify stats for non-owner roles
+        function modifyStatsForRole(user) {
+            const userRole = user.role.toLowerCase();
+            
+            // Update stats to show personal payment info
+            document.getElementById('totalPaid').textContent = '₹15,000';
+            document.getElementById('totalPending').textContent = '₹8,000';
+            document.getElementById('totalEmployees').textContent = '1';
+            document.getElementById('pendingApprovals').textContent = '1';
+            
+            // Update labels
+            document.querySelector('#totalPaid').parentElement.querySelector('p').textContent = 'Total Received';
+            document.querySelector('#totalPending').parentElement.querySelector('p').textContent = 'Pending Payment';
+            document.querySelector('#totalEmployees').parentElement.querySelector('p').textContent = 'My Profile';
+            document.querySelector('#pendingApprovals').parentElement.querySelector('p').textContent = 'Payment Due';
+        }
+        
+        // Update user info
+        function updateUserInfo(user) {
+            const userName = `${user.firstName} ${user.lastName}`;
+            const userInitials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+            
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            document.getElementById('userAvatar').textContent = userInitials;
+        }
+        
+        // Load salary data based on user role
+        async function loadSalaryData() {
+            const salaryList = document.getElementById('salaryList');
+            salaryList.innerHTML = '<div class="text-center p-4">Loading salary data...</div>';
+            
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const userName = `${userData.firstName} ${userData.lastName}`;
+            
+            try {
+                if (userRole === 'owner') {
+                    // Owner sees all employee salaries from their shop
+                    // Handle both 'id' and '_id' fields for compatibility
+                    const userId = userData._id || userData.id;
+                    
+                    const params = new URLSearchParams({
+                        shopName: userData.shopName,
+                        userRole: userRole,
+                        userId: userId
+                    });
+                    
+                    console.log('Loading salary data with params:', {
+                        shopName: userData.shopName,
+                        userRole: userRole,
+                        userId: userId
+                    });
+                    
+                    const response = await fetch(`/api/salary?${params}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch salary data');
+                    }
+                    
+                    const data = await response.json();
+                    const salaries = data.data || [];
+                    
+                    console.log('Salaries received:', salaries.length);
+                    
+                    salaryList.innerHTML = '';
+                    
+                    if (salaries.length === 0) {
+                        salaryList.innerHTML = `
+                            <div class="text-center p-4" style="color: #64748b;">
+                                <i class="fas fa-money-bill-wave fa-3x mb-3" style="opacity: 0.3;"></i>
+                                <h5>No salary records found</h5>
+                                <p>There are no salary records in the system at the moment.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Group salaries by employee
+                    const employeeMap = new Map();
+                    salaries.forEach(salary => {
+                        const empId = salary.employee._id;
+                        if (!employeeMap.has(empId)) {
+                            employeeMap.set(empId, {
+                                employee: salary.employee,
+                                salaries: [],
+                                totalEarnings: 0,
+                                paidSalary: 0,
+                                remainingSalary: 0
+                            });
+                        }
+                        
+                        const empData = employeeMap.get(empId);
+                        empData.salaries.push(salary);
+                        empData.totalEarnings += salary.amount;
+                        if (salary.isPaid) {
+                            empData.paidSalary += salary.amount;
+                        } else {
+                            empData.remainingSalary += salary.amount;
+                        }
+                    });
+                    
+                    // Update overall stats
+                    updateSalaryStats(Array.from(employeeMap.values()));
+                    
+                    // Create cards for each employee
+                    employeeMap.forEach(empData => {
+                        const salaryCard = createSalaryCard(empData, false);
+                        salaryList.appendChild(salaryCard);
+                    });
+                    
+                } else {
+                    // Non-owners see only their personal salary data
+                    // Handle both 'id' and '_id' fields for compatibility
+                    const userId = userData._id || userData.id;
+                    
+                    const params = new URLSearchParams({
+                        employeeId: userId,
+                        shopName: userData.shopName,
+                        userRole: userRole
+                    });
+                    
+                    console.log('Loading personal salary with params:', {
+                        employeeId: userId,
+                        shopName: userData.shopName,
+                        userRole: userRole
+                    });
+                    
+                    const response = await fetch(`/api/salary/my-salary?${params}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch personal salary data');
+                    }
+                    
+                    const data = await response.json();
+                    const salaryData = data.data;
+                    
+                    // Create personal salary record
+                    const personalRecord = {
+                        employee: userData,
+                        totalEarnings: salaryData.totalEarnings || 0,
+                        paidSalary: salaryData.paidSalary || 0,
+                        remainingSalary: salaryData.remainingSalary || 0,
+                        salaries: salaryData.salaries || [],
+                        accuracyRating: userData.accuracyRating || 7.5,
+                        status: salaryData.remainingSalary > 0 ? 'pending' : 'paid',
+                        lastPayment: salaryData.salaries && salaryData.salaries.length > 0 ? 
+                            salaryData.salaries.filter(s => s.isPaid).pop()?.paidDate : null
+                    };
+                    
+                    // Update personal stats
+                    updatePersonalSalaryStats(personalRecord);
+                    
+                    salaryList.innerHTML = '';
+                    const salaryCard = createSalaryCard(personalRecord, true);
+                    salaryList.appendChild(salaryCard);
+                }
+                
+            } catch (error) {
+                console.error('Error loading salary data:', error);
+                salaryList.innerHTML = `
+                    <div class="text-center p-4" style="color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <h5>Error Loading Salary Data</h5>
+                        <p>Unable to load salary information from the database. Please try again later.</p>
+                        <button class="btn btn-primary" onclick="loadSalaryData()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Update salary statistics for owner
+        function updateSalaryStats(employees) {
+            const totalPaid = employees.reduce((sum, emp) => sum + emp.paidSalary, 0);
+            const totalPending = employees.reduce((sum, emp) => sum + emp.remainingSalary, 0);
+            const totalEmployees = employees.length;
+            const pendingApprovals = employees.filter(emp => emp.remainingSalary > 0).length;
+            
+            document.getElementById('totalPaid').textContent = `₹${totalPaid.toLocaleString()}`;
+            document.getElementById('totalPending').textContent = `₹${totalPending.toLocaleString()}`;
+            document.getElementById('totalEmployees').textContent = totalEmployees;
+            document.getElementById('pendingApprovals').textContent = pendingApprovals;
+        }
+        
+        // Update personal salary statistics
+        function updatePersonalSalaryStats(record) {
+            document.getElementById('totalPaid').textContent = `₹${record.paidSalary.toLocaleString()}`;
+            document.getElementById('totalPending').textContent = `₹${record.remainingSalary.toLocaleString()}`;
+            document.getElementById('totalEmployees').textContent = '1';
+            document.getElementById('pendingApprovals').textContent = record.remainingSalary > 0 ? '1' : '0';
+        }
+        
+        // Create salary card
+        function createSalaryCard(employeeData, isPersonalView = false) {
+            const card = document.createElement('div');
+            card.className = 'salary-card';
+            
+            const employee = employeeData.employee || employeeData;
+            const status = employeeData.remainingSalary > 0 ? 'pending' : 'paid';
+            const statusClass = `status-${status}`;
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            // Add data attributes for payment modal
+            card.dataset.employeeId = employee._id || employee.id;
+            card.dataset.remainingSalary = employeeData.remainingSalary;
+            
+            // Generate star rating
+            const rating = employee.accuracyRating || employeeData.accuracyRating || 7.5;
+            const stars = Array.from({length: 10}, (_, i) => 
+                `<i class="fas fa-star ${i < rating ? 'star' : 'star empty'}"></i>`
+            ).join('');
+            
+            const hasNotification = employeeData.remainingSalary > 0;
+            
+            // Get employee name
+            const employeeName = employee.firstName ? 
+                `${employee.firstName} ${employee.lastName}` : 
+                (employee.name || 'Unknown Employee');
+            
+            // Get employee role
+            const employeeRole = employee.role || 'Unknown Role';
+            
+            // Get work completed (from recent salaries)
+            let workCompleted = ['No recent work'];
+            if (employeeData.salaries && employeeData.salaries.length > 0) {
+                workCompleted = employeeData.salaries
+                    .slice(-3) // Last 3 entries
+                    .map(s => {
+                        if (s.relatedOrder && s.relatedOrder.orderName) {
+                            return `Order: ${s.relatedOrder.orderName}`;
+                        } else if (s.relatedProject && s.relatedProject.projectName) {
+                            return `Project: ${s.relatedProject.projectName}`;
+                        } else {
+                            return s.description || 'Work completed';
+                        }
+                    })
+                    .filter(desc => desc !== 'Work completed');
+                
+                if (workCompleted.length === 0) {
+                    workCompleted = ['Recent work completed'];
+                }
+            }
+            
+            // Different content for personal view
+            const headerContent = isPersonalView ? 
+                `<div class="employee-name">
+                    My Payment Status
+                    ${hasNotification ? '<span class="notification-badge">Payment Due!</span>' : ''}
+                </div>
+                <div class="employee-role">${employeeRole.replace('_', '/').toUpperCase()}</div>` :
+                `<div class="employee-name">
+                    ${employeeName}
+                    ${hasNotification ? '<span class="notification-badge">!</span>' : ''}
+                </div>
+                <div class="employee-role">${employeeRole.replace('_', '/').toUpperCase()}</div>`;
+            
+            const payButtonContent = isPersonalView ? 
+                (employeeData.remainingSalary > 0 ? 
+                    `<div style="color: #ef4444; font-weight: 600;">
+                        <i class="fas fa-clock me-1"></i> Payment Pending
+                    </div>` : 
+                    `<div style="color: #10b981; font-weight: 600;">
+                        <i class="fas fa-check me-1"></i> All Payments Received
+                    </div>`) :
+                (employeeData.remainingSalary > 0 ? 
+                    `<button class="pay-btn" onclick="showPaymentModal('${employee._id || employee.id}')">
+                        <i class="fas fa-money-bill-wave me-1"></i> Pay Salary
+                    </button>` : 
+                    `<button class="pay-btn" disabled>
+                        <i class="fas fa-check me-1"></i> Fully Paid
+                    </button>`);
+            
+            // Last payment date
+            let lastPaymentText = 'No payments yet';
+            if (employeeData.lastPayment) {
+                lastPaymentText = new Date(employeeData.lastPayment).toLocaleDateString();
+            } else if (employeeData.salaries && employeeData.salaries.length > 0) {
+                const lastPaid = employeeData.salaries.filter(s => s.isPaid).pop();
+                if (lastPaid && lastPaid.paidDate) {
+                    lastPaymentText = new Date(lastPaid.paidDate).toLocaleDateString();
+                }
+            }
+            
+            card.innerHTML = `
+                <div class="employee-header">
+                    ${headerContent}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Total Earnings:</strong><br>
+                        <span style="color: #3b82f6; font-weight: 600;">₹${employeeData.totalEarnings.toLocaleString()}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>${isPersonalView ? 'Received' : 'Paid Salary'}:</strong><br>
+                        <span style="color: #10b981; font-weight: 600;">₹${employeeData.paidSalary.toLocaleString()}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Remaining:</strong><br>
+                        <span style="color: #ef4444; font-weight: 600;" data-remaining-salary="₹${employeeData.remainingSalary.toLocaleString()}">₹${employeeData.remainingSalary.toLocaleString()}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Status:</strong><br>
+                        <span class="salary-status ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <strong>${isPersonalView ? 'My Performance Rating' : 'Accuracy Rating'}:</strong>
+                        <div class="accuracy-rating">
+                            ${stars}
+                            <span style="margin-left: 8px; color: #64748b;">(${rating}/10)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>${isPersonalView ? 'My Recent Work' : 'Recent Work'}:</strong><br>
+                        <span style="color: #64748b; font-size: 0.875rem;">${workCompleted.join(', ')}</span>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <strong>Last Payment:</strong><br>
+                        <span style="color: #64748b;">${lastPaymentText}</span>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        ${payButtonContent}
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Show payment modal
+        function showPaymentModal(employeeId) {
+            // Find employee data from the loaded data
+            const employeeCards = document.querySelectorAll('.salary-card');
+            let employeeData = null;
+            
+            // Since we're using database data, we need to get the employee info from the card
+            employeeCards.forEach(card => {
+                const cardId = card.dataset.employeeId;
+                if (cardId === employeeId) {
+                    const employeeName = card.querySelector('.employee-name').textContent.trim();
+                    const remainingAmount = card.querySelector('[data-remaining-salary]')?.dataset.remainingSalary || '0';
+                    const employeeRole = card.querySelector('.employee-role').textContent.trim();
+                    
+                    employeeData = {
+                        id: employeeId,
+                        name: employeeName,
+                        remainingSalary: parseInt(remainingAmount.replace(/[₹,]/g, '')),
+                        role: employeeRole
+                    };
+                }
+            });
+            
+            if (!employeeData) return;
+            
+            currentPaymentEmployee = employeeData;
+            
+            document.getElementById('paymentEmployeeName').textContent = employeeData.name;
+            document.getElementById('paymentAmount').textContent = employeeData.remainingSalary.toLocaleString();
+            document.getElementById('paymentType').textContent = employeeData.role + ' Salary';
+            
+            const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+        }
+        
+        // Confirm payment
+        async function confirmPayment() {
+            if (!currentPaymentEmployee) return;
+            
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                
+                const paymentData = {
+                    employeeId: currentPaymentEmployee.id,
+                    amount: currentPaymentEmployee.remainingSalary,
+                    shopName: userData.shopName,
+                    paidBy: userData._id || userData.id
+                };
+                
+                const response = await fetch('/api/salary/pay', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to process payment');
+                }
+                
+                // Reload salary data
+                await loadSalaryData();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+                modal.hide();
+                
+                // Show success message
+                alert(`Payment of ₹${currentPaymentEmployee.remainingSalary.toLocaleString()} confirmed for ${currentPaymentEmployee.name}!`);
+                
+                currentPaymentEmployee = null;
+                
+            } catch (error) {
+                console.error('Error processing payment:', error);
+                alert('Failed to process payment. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders Management - Business Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+        }
+        
+        /* Hamburger Menu Button (Mobile Only) */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .hamburger-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .hamburger-btn i {
+            font-size: 1.2rem;
+            color: #1e293b;
+            transition: transform 0.2s ease;
+        }
+        
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .mobile-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Include sidebar styles from index.html */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+        }
+        
+        .sidebar-brand i {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item {
+            margin: 2px 12px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        
+        .nav-link.active {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .dashboard-content {
+            padding: 32px;
+        }
+        
+        /* Order specific styles */
+        .order-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .order-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .order-id {
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .order-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .btn-create {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-create:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .form-control, .form-select {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Dynamic rows styling */
+        .worker-row, .transporter-row {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .worker-row:hover, .transporter-row:hover {
+            background: #f1f5f9;
+        }
+        
+        .btn-outline-primary, .btn-outline-success, .btn-outline-danger {
+            border-width: 1px;
+            font-weight: 500;
+        }
+        
+        .btn-outline-danger:hover {
+            background-color: #ef4444;
+            border-color: #ef4444;
+        }
+        
+        #workersContainer:empty::after {
+            content: "No workers added yet. Click 'Add Worker' to assign workers to this order.";
+            display: block;
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+            padding: 20px;
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        #transportersContainer:empty::after {
+            content: "No transporters added yet. Click 'Add Transporter' to assign transporters to this order.";
+            display: block;
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+            padding: 20px;
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        /* Mobile Responsive Design */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .top-header {
+                padding: 16px 20px;
+                padding-left: 70px; /* Space for hamburger */
+            }
+            
+            .page-title {
+                font-size: 1.25rem;
+            }
+            
+            .dashboard-content {
+                padding: 20px 16px;
+            }
+            
+            .user-menu {
+                padding: 6px 8px;
+                gap: 8px;
+            }
+            
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+            
+            /* Make stats cards stack on mobile */
+            .row .col-md-3 {
+                margin-bottom: 16px;
+            }
+            
+            /* Order card mobile adjustments */
+            .order-card {
+                padding: 16px;
+            }
+            
+            .order-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .order-id {
+                font-size: 0.9rem;
+            }
+            
+            /* Button adjustments */
+            .btn-create {
+                padding: 10px 16px;
+                font-size: 0.875rem;
+            }
+            
+            /* Modal adjustments */
+            .modal-dialog {
+                margin: 10px;
+            }
+            
+            .modal-body {
+                padding: 16px;
+            }
+            
+            /* Form adjustments */
+            .form-control, .form-select {
+                padding: 10px 12px;
+            }
+            
+            /* Dynamic rows mobile adjustments */
+            .worker-row, .transporter-row {
+                padding: 8px;
+                margin-bottom: 12px;
+            }
+            
+            .worker-row .row, .transporter-row .row {
+                margin: 0;
+            }
+            
+            .worker-row .col-md-5, .worker-row .col-md-4, .worker-row .col-md-3,
+            .transporter-row .col-md-5, .transporter-row .col-md-4, .transporter-row .col-md-3 {
+                padding: 2px;
+                margin-bottom: 8px;
+            }
+        }
+        
+        /* Tablet adjustments */
+        @media (max-width: 992px) and (min-width: 769px) {
+            .dashboard-content {
+                padding: 24px;
+            }
+            
+            .order-card {
+                padding: 18px;
+            }
+        }
+        
+        /* Small mobile adjustments */
+        @media (max-width: 480px) {
+            .hamburger-btn {
+                top: 0.75rem;
+                left: 0.75rem;
+                padding: 10px;
+            }
+            
+            .top-header {
+                padding: 12px 16px;
+                padding-left: 60px;
+            }
+            
+            .page-title {
+                font-size: 1.1rem;
+            }
+            
+            .dashboard-content {
+                padding: 16px 12px;
+            }
+            
+            .order-card {
+                padding: 12px;
+            }
+            
+            .btn-create {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .user-menu div:last-child {
+                display: none; /* Hide user details on very small screens */
+            }
+            
+            /* Stack form elements on very small screens */
+            .modal-body .row .col-md-6 {
+                margin-bottom: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hamburger Menu Button (Mobile Only) -->
+    <button class="hamburger-btn" id="hamburgerBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <i class="fas fa-business-time"></i>
+                <span>Business Manager</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav" style="padding: 20px 0;" id="sidebarNav">
+            <!-- Navigation will be loaded based on role -->
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="page-title">Orders Management</div>
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.875rem;" id="userName">Loading...</div>
+                    <div style="font-size: 0.75rem; color: #64748b;" id="userRole">Loading...</div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Action Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Order Management</h3>
+                <button class="btn-create" data-bs-toggle="modal" data-bs-target="#createOrderModal">
+                    <i class="fas fa-plus me-2"></i> Make Order
+                </button>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="order-card text-center">
+                        <h4 style="color: #f59e0b;" id="remainingOrders">5</h4>
+                        <p class="mb-0" style="color: #64748b;">Remaining Orders</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="order-card text-center">
+                        <h4 style="color: #10b981;" id="doneOrders">12</h4>
+                        <p class="mb-0" style="color: #64748b;">Done Orders</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="order-card text-center">
+                        <h4 style="color: #3b82f6;" id="totalPayment">₹1,50,000</h4>
+                        <p class="mb-0" style="color: #64748b;">Total Payment</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="order-card text-center">
+                        <h4 style="color: #10b981;" id="receivedPayment">₹1,00,000</h4>
+                        <p class="mb-0" style="color: #64748b;">Received Payment</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Orders List -->
+            <div class="row">
+                <div class="col-12">
+                    <h4 class="mb-3">Recent Orders</h4>
+                    <div id="ordersList">
+                        <!-- Orders will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Create Order Modal -->
+    <div class="modal fade" id="createOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createOrderForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client Name *</label>
+                                <select class="form-select" id="clientName" required>
+                                    <option value="">Select Client</option>
+                                    <!-- Clients will be loaded dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Order Date *</label>
+                                <input type="date" class="form-control" id="orderDate" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Order Name *</label>
+                                <input type="text" class="form-control" id="orderName" placeholder="e.g., Wedding Photography, Corporate Event" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Venue Place *</label>
+                                <input type="text" class="form-control" id="venuePlace" placeholder="e.g., Grand Hotel, City Convention Center" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Total Amount *</label>
+                                <input type="number" class="form-control" id="totalAmount" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Status</label>
+                                <select class="form-select" id="paymentStatus">
+                                    <option value="pending">Pending</option>
+                                    <option value="partial">Partial</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-control" id="description" rows="3" placeholder="Order description..." required></textarea>
+                        </div>
+                        
+                        <!-- Workers Section -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label mb-0">Workers</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="addWorkerRow()">
+                                    <i class="fas fa-plus me-1"></i> Add Worker
+                                </button>
+                            </div>
+                            <div id="workersContainer">
+                                <!-- Worker rows will be added here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Transporters Section -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label mb-0">Transporters</label>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="addTransporterRow()">
+                                    <i class="fas fa-plus me-1"></i> Add Transporter
+                                </button>
+                            </div>
+                            <div id="transportersContainer">
+                                <!-- Transporter rows will be added here -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createOrder()">Create Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mobile Navigation Functions
+        function initializeMobileNavigation() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            
+            if (!hamburgerBtn || !sidebar || !mobileOverlay) {
+                console.warn('Mobile navigation elements not found');
+                return;
+            }
+            
+            // Toggle sidebar on hamburger click
+            hamburgerBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMobileSidebar();
+            });
+            
+            // Close sidebar when overlay is clicked
+            mobileOverlay.addEventListener('click', function() {
+                closeMobileSidebar();
+            });
+            
+            // Close sidebar when navigation link is clicked (mobile only)
+            sidebar.addEventListener('click', function(e) {
+                if (e.target.matches('.nav-link') && window.innerWidth <= 768) {
+                    closeMobileSidebar();
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeMobileSidebar();
+                }
+            });
+            
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+                    closeMobileSidebar();
+                }
+            });
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const isOpen = sidebar.classList.contains('mobile-open');
+            
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        }
+        
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            
+            sidebar.classList.add('mobile-open');
+            mobileOverlay.classList.add('active');
+            
+            // Change hamburger icon to X
+            const icon = hamburgerBtn.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-times';
+            }
+            
+            // Prevent body scroll on mobile
+            if (window.innerWidth <= 768) {
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            
+            sidebar.classList.remove('mobile-open');
+            mobileOverlay.classList.remove('active');
+            
+            // Reset hamburger icon
+            const icon = hamburgerBtn.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-bars';
+            }
+            
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMobileNavigation();
+            checkAuth();
+            loadNavigation();
+            loadOrders();
+            setTodayDate();
+            loadDropdownData();
+            
+            // Reset form when modal is opened
+            const createOrderModal = document.getElementById('createOrderModal');
+            createOrderModal.addEventListener('show.bs.modal', function() {
+                resetOrderForm();
+            });
+        });
+        
+        // Reset order form
+        function resetOrderForm() {
+            const form = document.getElementById('createOrderForm');
+            form.reset();
+            
+            // Clear dynamic rows
+            document.getElementById('workersContainer').innerHTML = '';
+            document.getElementById('transportersContainer').innerHTML = '';
+            workerCounter = 0;
+            transporterCounter = 0;
+            
+            // Set today's date
+            setTodayDate();
+        }
+        
+        // Load dropdown data for form
+        async function loadDropdownData() {
+            await Promise.all([
+                loadClients(),
+                loadAvailableWorkers(),
+                loadAvailableTransporters()
+            ]);
+        }
+        
+        // Store available workers and transporters for dynamic selection
+        let availableWorkers = [];
+        let availableTransporters = [];
+        let workerCounter = 0;
+        let transporterCounter = 0;
+        
+        // Load clients for dropdown
+        async function loadClients() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: userData.role,
+                    userId: userData._id || userData.id
+                });
+                
+                console.log('Loading clients with params:', {
+                    shopName: userData.shopName,
+                    userRole: userData.role,
+                    userId: userData._id || userData.id
+                });
+                
+                const response = await fetch(`/api/clients?${params}`);
+                console.log('Clients API response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Clients data received:', data);
+                    
+                    const clientSelect = document.getElementById('clientName');
+                    
+                    // Clear existing options except the first one
+                    clientSelect.innerHTML = '<option value="">Select Client</option>';
+                    
+                    if (data.data && data.data.length > 0) {
+                        data.data.forEach(client => {
+                            const option = document.createElement('option');
+                            option.value = client._id;
+                            option.textContent = client.name;
+                            clientSelect.appendChild(option);
+                        });
+                        console.log(`Loaded ${data.data.length} clients successfully`);
+                    } else {
+                        console.log('No clients found in database');
+                        // Add a message option
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No clients available - Add clients first';
+                        option.disabled = true;
+                        clientSelect.appendChild(option);
+                    }
+                } else {
+                    console.error('Failed to load clients:', response.status);
+                    const data = await response.json();
+                    console.error('Error details:', data);
+                }
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                // Add error message to dropdown
+                const clientSelect = document.getElementById('clientName');
+                clientSelect.innerHTML = '<option value="">Error loading clients</option>';
+            }
+        }
+        
+        // Load available workers
+        async function loadAvailableWorkers() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    role: 'worker'
+                });
+                
+                const response = await fetch(`/api/users?${params}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    availableWorkers = data.data.filter(worker => worker.role.includes('worker'));
+                }
+            } catch (error) {
+                console.error('Error loading workers:', error);
+            }
+        }
+        
+        // Load available transporters
+        async function loadAvailableTransporters() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    role: 'transporter'
+                });
+                
+                const response = await fetch(`/api/users?${params}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    availableTransporters = data.data.filter(transporter => transporter.role.includes('transporter'));
+                }
+            } catch (error) {
+                console.error('Error loading transporters:', error);
+            }
+        }
+        
+        // Add worker row
+        function addWorkerRow() {
+            workerCounter++;
+            const container = document.getElementById('workersContainer');
+            
+            const workerRow = document.createElement('div');
+            workerRow.className = 'row mb-2 worker-row';
+            workerRow.id = `workerRow${workerCounter}`;
+            
+            let workerOptions = '<option value="">Select Worker</option>';
+            availableWorkers.forEach(worker => {
+                workerOptions += `<option value="${worker._id}">${worker.firstName} ${worker.lastName}</option>`;
+            });
+            
+            workerRow.innerHTML = `
+                <div class="col-md-5">
+                    <select class="form-select" name="workerSelect" required>
+                        ${workerOptions}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control" name="workerSalary" placeholder="Salary Amount" min="0" required>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeWorkerRow(${workerCounter})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(workerRow);
+        }
+        
+        // Remove worker row
+        function removeWorkerRow(id) {
+            const row = document.getElementById(`workerRow${id}`);
+            if (row) {
+                row.remove();
+            }
+        }
+        
+        // Add transporter row
+        function addTransporterRow() {
+            transporterCounter++;
+            const container = document.getElementById('transportersContainer');
+            
+            const transporterRow = document.createElement('div');
+            transporterRow.className = 'row mb-2 transporter-row';
+            transporterRow.id = `transporterRow${transporterCounter}`;
+            
+            let transporterOptions = '<option value="">Select Transporter</option>';
+            availableTransporters.forEach(transporter => {
+                transporterOptions += `<option value="${transporter._id}">${transporter.firstName} ${transporter.lastName}</option>`;
+            });
+            
+            transporterRow.innerHTML = `
+                <div class="col-md-5">
+                    <select class="form-select" name="transporterSelect" required>
+                        ${transporterOptions}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control" name="transporterFee" placeholder="Transport Fee" min="0" required>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTransporterRow(${transporterCounter})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(transporterRow);
+        }
+        
+        // Remove transporter row
+        function removeTransporterRow(id) {
+            const row = document.getElementById(`transporterRow${id}`);
+            if (row) {
+                row.remove();
+            }
+        }
+        
+        // Check authentication and setup role-based access
+        function checkAuth() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userData);
+                updateUserInfo(user);
+                setupRoleBasedAccess(user);
+            } catch (error) {
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Setup role-based access control
+        function setupRoleBasedAccess(user) {
+            const userRole = user.role.toLowerCase();
+            
+            // Check if user has access to orders
+            // Allow: owner, worker, transporter_worker, worker_editor, editor_worker
+            const allowedRoles = ['owner', 'worker', 'transporter_worker', 'worker_editor', 'editor_worker'];
+            const hasOrderAccess = allowedRoles.some(role => userRole.includes('worker') || userRole === 'owner');
+            
+            if (!hasOrderAccess) {
+                // Redirect users who don't have access to orders
+                showAlert('Access Denied: You do not have permission to view orders.', 'danger');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                return;
+            }
+            
+            if (userRole !== 'owner') {
+                // Change page title for non-owners
+                document.querySelector('.page-title').textContent = 'My Orders';
+                document.querySelector('h3').textContent = 'My Order Assignments';
+                
+                // Hide create order button for non-owners
+                const createBtn = document.querySelector('.btn-create');
+                if (createBtn) {
+                    createBtn.style.display = 'none';
+                }
+                
+                // Modify stats to show personal stats
+                modifyStatsForRole(user);
+            }
+        }
+        
+        // Load navigation based on user role
+        function loadNavigation() {
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const sidebarNav = document.getElementById('sidebarNav');
+            
+            let navItems = [];
+            
+            // Add navigation items based on role
+            navItems.push({
+                href: 'index.html',
+                icon: 'fas fa-home',
+                text: 'Home',
+                active: false
+            });
+            
+            if (userRole === 'owner' || userRole === 'worker' || userRole === 'transporter_worker' || userRole === 'worker_editor' || userRole === 'editor_worker') {
+                navItems.push({
+                    href: 'orders.html',
+                    icon: 'fas fa-box',
+                    text: 'Orders',
+                    active: true
+                });
+            }
+            
+            if (userRole === 'owner' || userRole === 'editor' || userRole === 'worker_editor') {
+                navItems.push({
+                    href: 'editing.html',
+                    icon: 'fas fa-video',
+                    text: 'Editing Projects',
+                    active: false
+                });
+            }
+            
+            if (userRole === 'owner' || userRole === 'transporter' || userRole === 'transporter_worker') {
+                navItems.push({
+                    href: 'transportation.html',
+                    icon: 'fas fa-truck',
+                    text: 'Transportation',
+                    active: false
+                });
+            }
+            
+            // Salary is available for all roles
+            navItems.push({
+                href: 'salary.html',
+                icon: 'fas fa-money-bill-wave',
+                text: 'Salary Management',
+                active: false
+            });
+            
+            // Owner-only sections
+            if (userRole === 'owner') {
+                navItems.push({
+                    href: 'clients.html',
+                    icon: 'fas fa-users',
+                    text: 'Clients',
+                    active: false
+                });
+                navItems.push({
+                    href: 'workers.html',
+                    icon: 'fas fa-hard-hat',
+                    text: 'Workers & Editors',
+                    active: false
+                });
+            }
+            
+            // Generate navigation HTML
+            sidebarNav.innerHTML = navItems.map(item => `
+                <div class="nav-item">
+                    <a href="${item.href}" class="nav-link ${item.active ? 'active' : ''}">
+                        <i class="${item.icon}"></i>
+                        <span>${item.text}</span>
+                    </a>
+                </div>
+            `).join('');
+        }
+        
+        // Modify stats for non-owner roles
+        function modifyStatsForRole(user) {
+            const userRole = user.role.toLowerCase();
+            
+            // Update labels to be clearer about what's "mine"
+            document.querySelector('#remainingOrders').parentElement.querySelector('p').textContent = 'My Active Orders';
+            document.querySelector('#doneOrders').parentElement.querySelector('p').textContent = 'My Completed Orders';
+            document.querySelector('#totalPayment').parentElement.querySelector('p').textContent = 'My Total Earnings';
+            document.querySelector('#receivedPayment').parentElement.querySelector('p').textContent = 'My Received Payments';
+            
+            // Note: The actual values will be set by updateOrderStats() when real data loads
+            // These are just placeholder values that will be overridden
+            document.getElementById('remainingOrders').textContent = '0';
+            document.getElementById('doneOrders').textContent = '0';
+            document.getElementById('totalPayment').textContent = '₹0';
+            document.getElementById('receivedPayment').textContent = '₹0';
+        }
+        
+        // Show alert function
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.left = '50%';
+            alertDiv.style.transform = 'translateX(-50%)';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.textContent = message;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (document.body.contains(alertDiv)) {
+                    document.body.removeChild(alertDiv);
+                }
+            }, 3000);
+        }
+        
+        // Update user info
+        function updateUserInfo(user) {
+            const userName = `${user.firstName} ${user.lastName}`;
+            const userInitials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+            
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            document.getElementById('userAvatar').textContent = userInitials;
+        }
+        
+        // Load orders based on user role
+        async function loadOrders() {
+            const ordersList = document.getElementById('ordersList');
+            ordersList.innerHTML = '<div class="text-center p-4">Loading orders...</div>';
+            
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const userName = `${userData.firstName} ${userData.lastName}`;
+            
+            try {
+                // Build query parameters for shop-based filtering
+                // Handle both 'id' and '_id' fields for compatibility
+                const userId = userData._id || userData.id;
+                
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                console.log('Loading orders with params:', {
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                const response = await fetch(`/api/orders?${params}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch orders');
+                }
+                
+                const data = await response.json();
+                let ordersToShow = data.data || [];
+                
+                console.log('Orders received:', ordersToShow.length);
+                
+                ordersList.innerHTML = '';
+                
+                if (ordersToShow.length === 0) {
+                    ordersList.innerHTML = `
+                        <div class="text-center p-4" style="color: #64748b;">
+                            <i class="fas fa-box fa-3x mb-3" style="opacity: 0.3;"></i>
+                            <h5>No orders found</h5>
+                            <p>There are no orders ${userRole === 'owner' ? 'in the system' : 'assigned to you'} at the moment.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Update stats based on loaded data
+                await updateOrderStats(ordersToShow, userRole);
+                
+                ordersToShow.forEach(order => {
+                    const orderCard = createOrderCard(order, userRole !== 'owner');
+                    ordersList.appendChild(orderCard);
+                });
+                
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                ordersList.innerHTML = `
+                    <div class="text-center p-4" style="color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <h5>Error Loading Orders</h5>
+                        <p>Unable to load orders from the database. Please try again later.</p>
+                        <button class="btn btn-primary" onclick="loadOrders()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Update order statistics
+        async function updateOrderStats(orders, userRole) {
+            const remainingOrders = orders.filter(o => o.status !== 'completed').length;
+            const doneOrders = orders.filter(o => o.status === 'completed').length;
+            
+            if (userRole === 'owner') {
+                // Owner sees total order values and received payments
+                const totalPayment = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+                const receivedPayment = orders.reduce((sum, o) => sum + (o.receivedPayment || 0), 0);
+                
+                document.getElementById('remainingOrders').textContent = remainingOrders;
+                document.getElementById('doneOrders').textContent = doneOrders;
+                document.getElementById('totalPayment').textContent = `₹${totalPayment.toLocaleString()}`;
+                document.getElementById('receivedPayment').textContent = `₹${receivedPayment.toLocaleString()}`;
+            } else {
+                // Workers/Transporters see their actual salary data from database
+                try {
+                    const userData = JSON.parse(localStorage.getItem('user'));
+                    const userId = userData._id || userData.id;
+                    
+                    const response = await fetch(`/api/salary/my-salary?employeeId=${userId}&shopName=${userData.shopName}&userRole=${userData.role}`);
+                    if (response.ok) {
+                        const salaryData = await response.json();
+                        const data = salaryData.data;
+                        
+                        // Filter order-related salaries (both order_work and transport_work)
+                        const orderSalaries = data.salaries.filter(s => s.salaryType === 'order_work' || s.salaryType === 'transport_work');
+                        const totalOrderEarnings = orderSalaries.reduce((sum, s) => sum + s.amount, 0);
+                        const paidOrderSalary = orderSalaries.filter(s => s.isPaid).reduce((sum, s) => sum + s.amount, 0);
+                        
+                        document.getElementById('remainingOrders').textContent = remainingOrders;
+                        document.getElementById('doneOrders').textContent = doneOrders;
+                        document.getElementById('totalPayment').textContent = `₹${totalOrderEarnings.toLocaleString()}`; // My total earnings from orders
+                        document.getElementById('receivedPayment').textContent = `₹${paidOrderSalary.toLocaleString()}`; // My received payments
+                    } else {
+                        // Fallback
+                        document.getElementById('remainingOrders').textContent = remainingOrders;
+                        document.getElementById('doneOrders').textContent = doneOrders;
+                        document.getElementById('totalPayment').textContent = '₹0';
+                        document.getElementById('receivedPayment').textContent = '₹0';
+                    }
+                } catch (error) {
+                    console.error('Error fetching salary data:', error);
+                    document.getElementById('remainingOrders').textContent = remainingOrders;
+                    document.getElementById('doneOrders').textContent = doneOrders;
+                    document.getElementById('totalPayment').textContent = '₹0';
+                    document.getElementById('receivedPayment').textContent = '₹0';
+                }
+            }
+        }
+        
+        // Create order card
+        function createOrderCard(order, isPersonalView = false) {
+            const card = document.createElement('div');
+            card.className = 'order-card';
+            
+            const statusClass = `status-${order.status === 'in_progress' ? 'progress' : order.status}`;
+            const statusText = order.status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            // Get client name and phone
+            const clientName = order.client ? 
+                (typeof order.client === 'object' ? order.client.name : order.client) : 
+                'Unknown Client';
+            
+            const clientPhone = order.client && typeof order.client === 'object' && order.client.phone ? 
+                order.client.phone : 'No phone';
+            
+            // Get order name and venue info
+            const orderName = order.orderName || 'Unnamed Order';
+            const venuePlace = order.venuePlace || 'No venue specified';
+            
+            // Get workers info
+            let workersInfo = 'No workers assigned';
+            if (order.workers && order.workers.length > 0) {
+                if (isPersonalView) {
+                    workersInfo = 'Team Member';
+                } else {
+                    workersInfo = order.workers.map(w => {
+                        if (w.worker && typeof w.worker === 'object') {
+                            return `${w.worker.firstName} ${w.worker.lastName}`;
+                        }
+                        return w.worker || w;
+                    }).join(', ');
+                }
+            }
+            
+            // Get transporters info
+            let transporterInfo = 'No transporter assigned';
+            if (order.transporters && order.transporters.length > 0) {
+                transporterInfo = order.transporters.map(t => {
+                    if (t.transporter && typeof t.transporter === 'object') {
+                        return `${t.transporter.firstName} ${t.transporter.lastName}`;
+                    }
+                    return t.transporter || t;
+                }).join(', ');
+            }
+            
+            const amountLabel = isPersonalView ? 'My Earnings' : 'Total Amount';
+            const workersLabel = isPersonalView ? 'My Role' : 'Workers';
+            
+            // Calculate personal earnings for workers
+            let displayAmount = order.totalAmount || 0;
+            if (isPersonalView && order.workers) {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const userWorker = order.workers.find(w => {
+                    if (w.worker && typeof w.worker === 'object') {
+                        return `${w.worker.firstName} ${w.worker.lastName}` === `${userData.firstName} ${userData.lastName}`;
+                    }
+                    return false;
+                });
+                if (userWorker && userWorker.payment) {
+                    displayAmount = userWorker.payment;
+                }
+            }
+
+            // Check if user is owner to show delete button
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const isOwner = userData && userData.role && userData.role.toLowerCase() === 'owner';
+            
+            // Create delete button for owners only
+            let deleteButton = '';
+            if (isOwner && !isPersonalView) {
+                deleteButton = `
+                    <div class="order-actions mt-3">
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteOrder('${order._id}', '${orderName}')" title="Delete Order">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            card.innerHTML = `
+                <div class="order-header">
+                    <div class="order-id">${order._id ? order._id.slice(-6).toUpperCase() : 'NEW'}</div>
+                    <div class="order-status ${statusClass}">${statusText}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Client:</strong><br>
+                        <span style="color: #64748b;">${clientName}</span><br>
+                        <small style="color: #64748b;"><i class="fas fa-phone"></i> ${clientPhone}</small>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Order Name:</strong><br>
+                        <span style="color: #64748b;">${orderName}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Venue:</strong><br>
+                        <span style="color: #64748b;">${venuePlace}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>${amountLabel}:</strong><br>
+                        <span style="color: #64748b;">₹${displayAmount.toLocaleString()}</span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-4">
+                        <strong>${workersLabel}:</strong><br>
+                        <span style="color: #64748b;">${workersInfo}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Transporter:</strong><br>
+                        <span style="color: #64748b;">${transporterInfo}</span>
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Date:</strong><br>
+                        <span style="color: #64748b;">${new Date(order.orderDate || order.createdAt).toLocaleDateString()}</span>
+                    </div>
+                </div>
+                ${order.description ? `
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <strong>Description:</strong><br>
+                        <span style="color: #64748b; font-size: 0.875rem;">${order.description}</span>
+                    </div>
+                </div>
+                ` : ''}
+                ${deleteButton}
+            `;
+            
+            return card;
+        }
+        
+        // Set today's date
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('orderDate').value = today;
+        }
+
+        // Delete order function (owners only)
+        async function deleteOrder(orderId, orderName) {
+            if (!confirm(`Are you sure you want to delete the order "${orderName}"?\n\nThis action cannot be undone and will also delete all related salary entries.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/orders/${orderId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('Order deleted successfully', 'success');
+                    // Refresh the orders list
+                    loadOrders();
+                } else {
+                    showAlert(`Error deleting order: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                showAlert('Network error while deleting order', 'error');
+            }
+        }
+        
+        // Create order
+        async function createOrder() {
+            const form = document.getElementById('createOrderForm');
+            
+            // Basic validation
+            const clientId = document.getElementById('clientName').value;
+            const orderDate = document.getElementById('orderDate').value;
+            const orderName = document.getElementById('orderName').value.trim();
+            const venuePlace = document.getElementById('venuePlace').value.trim();
+            const totalAmount = document.getElementById('totalAmount').value;
+            const paymentStatus = document.getElementById('paymentStatus').value;
+            const description = document.getElementById('description').value.trim();
+            
+            if (!clientId || !orderDate || !orderName || !venuePlace || !totalAmount || !description) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Collect workers data
+            const workerRows = document.querySelectorAll('.worker-row');
+            const workers = [];
+            let totalWorkerSalary = 0;
+            
+            for (const row of workerRows) {
+                const workerSelect = row.querySelector('select[name="workerSelect"]');
+                const salaryInput = row.querySelector('input[name="workerSalary"]');
+                
+                if (workerSelect.value && salaryInput.value) {
+                    const salary = parseInt(salaryInput.value);
+                    workers.push({
+                        worker: workerSelect.value,
+                        payment: salary
+                    });
+                    totalWorkerSalary += salary;
+                } else if (workerSelect.value || salaryInput.value) {
+                    alert('Please complete all worker information or remove incomplete entries');
+                    return;
+                }
+            }
+            
+            // Collect transporters data
+            const transporterRows = document.querySelectorAll('.transporter-row');
+            const transporters = [];
+            let totalTransporterFee = 0;
+            
+            for (const row of transporterRows) {
+                const transporterSelect = row.querySelector('select[name="transporterSelect"]');
+                const feeInput = row.querySelector('input[name="transporterFee"]');
+                
+                if (transporterSelect.value && feeInput.value) {
+                    const fee = parseInt(feeInput.value);
+                    transporters.push({
+                        transporter: transporterSelect.value,
+                        payment: fee  // Changed from 'fee' to 'payment' to match model
+                    });
+                    totalTransporterFee += fee;
+                } else if (transporterSelect.value || feeInput.value) {
+                    alert('Please complete all transporter information or remove incomplete entries');
+                    return;
+                }
+            }
+            
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                
+                // Get or create a valid user ID
+                let createdById = userData._id || userData.id;
+                
+                // If we don't have a valid user ID, we need to create/get one from the database
+                if (!createdById || createdById === 'undefined' || createdById.length !== 24) {
+                    console.log('Invalid user ID, attempting to get/create user...');
+                    
+                    // Try to find or create a user
+                    const userResponse = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            firstName: userData.firstName || 'Test',
+                            lastName: userData.lastName || 'User',
+                            email: userData.email || 'test@example.com',
+                            role: userData.role || 'owner',
+                            shopName: userData.shopName || 'Test Shop'
+                        })
+                    });
+                    
+                    if (userResponse.ok) {
+                        const userResult = await userResponse.json();
+                        createdById = userResult.user._id;
+                        
+                        // Update localStorage with the real user ID
+                        userData._id = createdById;
+                        localStorage.setItem('user', JSON.stringify(userData));
+                        
+                        console.log('Created/found user with ID:', createdById);
+                    } else {
+                        // If user creation fails, use a default ObjectId format
+                        createdById = '507f1f77bcf86cd799439011';
+                        console.log('Using default user ID:', createdById);
+                    }
+                }
+                
+                // Calculate received payment based on status
+                let receivedPayment = 0;
+                if (paymentStatus === 'completed') {
+                    receivedPayment = parseInt(totalAmount);
+                } else if (paymentStatus === 'partial') {
+                    receivedPayment = Math.round(parseInt(totalAmount) * 0.5);
+                }
+                
+                // Create new order object matching the API expectations
+                const newOrder = {
+                    clientId: clientId,
+                    orderName: orderName,
+                    venuePlace: venuePlace,
+                    products: [{
+                        name: orderName,
+                        quantity: 1,
+                        price: parseInt(totalAmount)
+                    }],
+                    totalAmount: parseInt(totalAmount),
+                    receivedPayment: receivedPayment,
+                    orderDate: orderDate,
+                    workers: workers,
+                    transporters: transporters,
+                    description: description,
+                    shopName: userData.shopName || 'Test Shop',
+                    createdBy: createdById
+                };
+                
+                console.log('Sending order data:', newOrder);
+                
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newOrder)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Server error:', errorData);
+                    throw new Error(`Server error: ${errorData.message || 'Unknown error'}`);
+                }
+                
+                const result = await response.json();
+                console.log('Order created successfully:', result);
+                
+                // Reload orders
+                await loadOrders();
+                
+                // Close modal and reset form
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createOrderModal'));
+                modal.hide();
+                
+                // Reset form and clear dynamic rows
+                form.reset();
+                document.getElementById('workersContainer').innerHTML = '';
+                document.getElementById('transportersContainer').innerHTML = '';
+                workerCounter = 0;
+                transporterCounter = 0;
+                setTodayDate();
+                
+                alert(`Order created successfully!\nTotal Amount: ₹${parseInt(totalAmount).toLocaleString()}\nWorker Costs: ₹${totalWorkerSalary.toLocaleString()}\nTransport Costs: ₹${totalTransporterFee.toLocaleString()}\nNet Profit: ₹${(parseInt(totalAmount) - totalWorkerSalary - totalTransporterFee).toLocaleString()}`);
+                
+            } catch (error) {
+                console.error('Error creating order:', error);
+                alert(`Failed to create order: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Business Manager - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        
+        /* Hamburger Menu Button (Mobile Only) */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .hamburger-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .hamburger-btn i {
+            font-size: 1.2rem;
+            color: #1e293b;
+            transition: transform 0.2s ease;
+        }
+        
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .mobile-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+        }
+        
+        .sidebar-brand i {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item {
+            margin: 2px 12px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        
+        .nav-link.active {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .dashboard-content {
+            padding: 32px;
+        }
+        
+        /* Alert Cards */
+        .alert-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .alert-card.urgent {
+            border-left-color: #ef4444;
+        }
+        
+        .alert-card.info {
+            border-left-color: #3b82f6;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        /* Toggle Buttons */
+        .business-toggle {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            justify-content: center;
+        }
+        
+        .toggle-btn {
+            padding: 12px 24px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        
+        .action-btn {
+            padding: 16px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: #1e293b;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .dashboard-content {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Mobile Responsive Design */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .top-header {
+                padding: 16px 20px;
+                padding-left: 70px; /* Space for hamburger */
+            }
+            
+            .page-title {
+                font-size: 1.25rem;
+            }
+            
+            .dashboard-content {
+                padding: 20px 16px;
+            }
+            
+            .user-menu {
+                padding: 6px 8px;
+                gap: 8px;
+            }
+            
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .dashboard-card {
+                padding: 16px;
+                margin-bottom: 16px;
+            }
+            
+            .card-title {
+                font-size: 1.1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .action-btn {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* Small Mobile */
+        @media (max-width: 480px) {
+            .hamburger-btn {
+                top: 0.75rem;
+                left: 0.75rem;
+                padding: 10px;
+            }
+            
+            .top-header {
+                padding: 12px 16px;
+                padding-left: 60px;
+            }
+            
+            .page-title {
+                font-size: 1.1rem;
+            }
+            
+            .dashboard-content {
+                padding: 16px 12px;
+            }
+            
+            .dashboard-card {
+                padding: 12px;
+            }
+            
+            .user-menu div:last-child {
+                display: none; /* Hide user details on very small screens */
+            }
+            
+            .stat-value {
+                font-size: 1.25rem;
+            }
+            
+            .card-title {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hamburger Menu Button (Mobile Only) -->
+    <button class="hamburger-btn" id="hamburgerBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <i class="fas fa-business-time"></i>
+                <span>Business Manager</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav" style="padding: 20px 0;" id="sidebarNav">
+            <!-- Navigation will be loaded based on role -->
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="page-title">Dashboard - Today's Overview</div>
+            <div class="user-menu" onclick="toggleUserMenu()">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.875rem;" id="userName">Loading...</div>
+                    <div style="font-size: 0.75rem; color: #64748b;" id="userRole">Loading...</div>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </header>
+        
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Role Indicator -->
+            <div id="roleIndicator" style="display: none; background: #eff6ff; border: 1px solid #3b82f6; border-radius: 8px; padding: 12px; margin-bottom: 20px; color: #1e40af;">
+                <i class="fas fa-info-circle me-2"></i>
+                <span id="roleMessage"></span>
+            </div>
+            
+            <!-- Today's Alerts -->
+            <div class="mb-4">
+                <h3 class="section-header">Today's Alerts</h3>
+                <div id="todayAlerts">
+                    <!-- Alerts will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Business Toggle -->
+            <div class="business-toggle">
+                <button class="toggle-btn active" onclick="showOrders()">
+                    <i class="fas fa-box me-2"></i> Our Orders
+                </button>
+                <button class="toggle-btn" onclick="showEditing()">
+                    <i class="fas fa-video me-2"></i> Our Editing Projects
+                </button>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="stats-grid" id="statsGrid">
+                <!-- Stats will be loaded here -->
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="mb-4">
+                <h3 class="section-header">Quick Actions</h3>
+                <div class="quick-actions">
+                    <a href="orders.html" class="action-btn">
+                        <i class="fas fa-plus-circle mb-2" style="font-size: 1.5rem; color: #3b82f6;"></i>
+                        <div>Create Order</div>
+                    </a>
+                    <a href="editing.html" class="action-btn">
+                        <i class="fas fa-video mb-2" style="font-size: 1.5rem; color: #10b981;"></i>
+                        <div>New Editing Project</div>
+                    </a>
+                    <a href="clients.html" class="action-btn">
+                        <i class="fas fa-user-plus mb-2" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                        <div>Add Client</div>
+                    </a>
+                    <a href="salary.html" class="action-btn">
+                        <i class="fas fa-money-bill-wave mb-2" style="font-size: 1.5rem; color: #ef4444;"></i>
+                        <div>Manage Salaries</div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Remaining Payments Box -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="stat-card">
+                        <h5 style="color: #64748b; margin-bottom: 16px;">Remaining Payments</h5>
+                        <div class="stat-value" style="color: #ef4444;" id="remainingPayments">₹0</div>
+                        <div style="font-size: 0.875rem; color: #64748b;">Pending from clients</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stat-card">
+                        <h5 style="color: #64748b; margin-bottom: 16px;">Worker & Editor Payments</h5>
+                        <div class="stat-value" style="color: #f59e0b;" id="workerPayments">₹0</div>
+                        <div style="font-size: 0.875rem; color: #64748b;">Pending salaries</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- User Menu Dropdown -->
+    <div id="userMenuDropdown" style="display: none; position: absolute; top: 60px; right: 32px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; min-width: 200px;">
+        <div style="padding: 8px 0;">
+            <a href="#" onclick="logout()" style="display: block; padding: 8px 16px; color: #ef4444; text-decoration: none; font-size: 0.875rem;">
+                <i class="fas fa-sign-out-alt" style="width: 16px; margin-right: 8px;"></i> Logout
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Mobile Navigation Functions
+        function initializeMobileNavigation() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            
+            if (!hamburgerBtn || !sidebar || !mobileOverlay) {
+                console.warn('Mobile navigation elements not found');
+                return;
+            }
+            
+            // Toggle sidebar on hamburger click
+            hamburgerBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMobileSidebar();
+            });
+            
+            // Close sidebar when overlay is clicked
+            mobileOverlay.addEventListener('click', function() {
+                closeMobileSidebar();
+            });
+            
+            // Close sidebar when navigation link is clicked (mobile only)
+            sidebar.addEventListener('click', function(e) {
+                if (e.target.matches('.nav-link') && window.innerWidth <= 768) {
+                    closeMobileSidebar();
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeMobileSidebar();
+                }
+            });
+            
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+                    closeMobileSidebar();
+                }
+            });
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const isOpen = sidebar.classList.contains('mobile-open');
+            
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        }
+        
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            
+            sidebar.classList.add('mobile-open');
+            mobileOverlay.classList.add('active');
+            
+            // Change hamburger icon to X
+            const icon = hamburgerBtn.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-times';
+            }
+            
+            // Prevent body scroll on mobile
+            if (window.innerWidth <= 768) {
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            
+            sidebar.classList.remove('mobile-open');
+            mobileOverlay.classList.remove('active');
+            
+            // Reset hamburger icon
+            const icon = hamburgerBtn.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-bars';
+            }
+            
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMobileNavigation();
+            checkAuth();
+            loadNavigation();
+            loadTodayAlerts();
+            loadStats();
+        });
+        
+        // Check authentication and setup role-based access
+        function checkAuth() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userData);
+                updateUserInfo(user);
+                setupRoleBasedAccess(user);
+            } catch (error) {
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Setup role-based access control
+        function setupRoleBasedAccess(user) {
+            const userRole = user.role.toLowerCase();
+            
+            if (userRole !== 'owner') {
+                // Modify dashboard content for non-owners
+                modifyDashboardForRole(user);
+            }
+        }
+        
+        // Load navigation based on user role
+        function loadNavigation() {
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const sidebarNav = document.getElementById('sidebarNav');
+            
+            let navItems = [];
+            
+            // Add navigation items based on role
+            navItems.push({
+                href: 'index.html',
+                icon: 'fas fa-home',
+                text: 'Home',
+                active: true
+            });
+            
+            if (userRole === 'owner' || userRole === 'worker' || userRole === 'transporter_worker' || userRole === 'worker_editor' || userRole === 'editor_worker') {
+                navItems.push({
+                    href: 'orders.html',
+                    icon: 'fas fa-box',
+                    text: 'Orders',
+                    active: false
+                });
+            }
+            
+            if (userRole === 'owner' || userRole === 'editor' || userRole === 'worker_editor') {
+                navItems.push({
+                    href: 'editing.html',
+                    icon: 'fas fa-video',
+                    text: 'Editing Projects',
+                    active: false
+                });
+            }
+            
+            if (userRole === 'owner' || userRole === 'transporter' || userRole === 'transporter_worker') {
+                navItems.push({
+                    href: 'transportation.html',
+                    icon: 'fas fa-truck',
+                    text: 'Transportation',
+                    active: false
+                });
+            }
+            
+            // Salary is available for all roles
+            navItems.push({
+                href: 'salary.html',
+                icon: 'fas fa-money-bill-wave',
+                text: 'Salary Management',
+                active: false
+            });
+            
+            // Owner-only sections
+            if (userRole === 'owner') {
+                navItems.push({
+                    href: 'clients.html',
+                    icon: 'fas fa-users',
+                    text: 'Clients',
+                    active: false
+                });
+                navItems.push({
+                    href: 'workers.html',
+                    icon: 'fas fa-hard-hat',
+                    text: 'Workers & Editors',
+                    active: false
+                });
+            }
+            
+            // Generate navigation HTML
+            sidebarNav.innerHTML = navItems.map(item => `
+                <div class="nav-item">
+                    <a href="${item.href}" class="nav-link ${item.active ? 'active' : ''}">
+                        <i class="${item.icon}"></i>
+                        <span>${item.text}</span>
+                    </a>
+                </div>
+            `).join('');
+        }
+        
+        // Modify dashboard content based on user role
+        function modifyDashboardForRole(user) {
+            const userRole = user.role.toLowerCase();
+            
+            if (userRole !== 'owner') {
+                // Show role indicator
+                const roleIndicator = document.getElementById('roleIndicator');
+                const roleMessage = document.getElementById('roleMessage');
+                
+                roleIndicator.style.display = 'block';
+                roleMessage.textContent = `You are logged in as ${user.role.toUpperCase()}. You can only see your personal work assignments and payment information.`;
+                
+                // Change page title
+                document.querySelector('.page-title').textContent = 'My Dashboard - Personal Overview';
+                
+                // Completely hide business toggle buttons
+                const businessToggle = document.querySelector('.business-toggle');
+                if (businessToggle) {
+                    businessToggle.remove(); // Completely remove from DOM
+                }
+                
+                // Replace quick actions with personal actions only
+                const quickActions = document.querySelector('.quick-actions');
+                if (quickActions) {
+                    const quickActionsParent = quickActions.parentElement;
+                    quickActionsParent.querySelector('h3').textContent = 'My Work Access';
+                    
+                    let personalActions = '';
+                    
+                    // Add actions based on user role
+                    if (userRole.includes('worker') || userRole.includes('transporter')) {
+                        personalActions += `
+                            <a href="orders.html" class="action-btn">
+                                <i class="fas fa-eye mb-2" style="font-size: 1.5rem; color: #3b82f6;"></i>
+                                <div>My Orders</div>
+                            </a>
+                        `;
+                    }
+                    
+                    if (userRole.includes('editor')) {
+                        personalActions += `
+                            <a href="editing.html" class="action-btn">
+                                <i class="fas fa-video mb-2" style="font-size: 1.5rem; color: #10b981;"></i>
+                                <div>My Projects</div>
+                            </a>
+                        `;
+                    }
+                    
+                    if (userRole.includes('transporter')) {
+                        personalActions += `
+                            <a href="transportation.html" class="action-btn">
+                                <i class="fas fa-truck mb-2" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                                <div>My Transports</div>
+                            </a>
+                        `;
+                    }
+                    
+                    // Always add salary access
+                    personalActions += `
+                        <a href="salary.html" class="action-btn">
+                            <i class="fas fa-money-bill-wave mb-2" style="font-size: 1.5rem; color: #ef4444;"></i>
+                            <div>My Payments</div>
+                        </a>
+                    `;
+                    
+                    quickActions.innerHTML = personalActions;
+                }
+                
+                // Update remaining payments section for personal view
+                const paymentsSection = document.querySelector('.row:last-child');
+                if (paymentsSection) {
+                    paymentsSection.innerHTML = `
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <h5 style="color: #64748b; margin-bottom: 16px;">My Pending Payment</h5>
+                                <div class="stat-value" style="color: #f59e0b;" id="myPendingPayment">₹0</div>
+                                <div style="font-size: 0.875rem; color: #64748b;">Ready for collection</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="stat-card">
+                                <h5 style="color: #64748b; margin-bottom: 16px;">My Total Earnings</h5>
+                                <div class="stat-value" style="color: #10b981;" id="myTotalEarnings">₹0</div>
+                                <div style="font-size: 0.875rem; color: #64748b;">All time earnings</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // For owners, ensure Quick Actions are properly set
+                const quickActions = document.querySelector('.quick-actions');
+                if (quickActions) {
+                    quickActions.innerHTML = `
+                        <a href="orders.html" class="action-btn">
+                            <i class="fas fa-plus-circle mb-2" style="font-size: 1.5rem; color: #3b82f6;"></i>
+                            <div>Create Order</div>
+                        </a>
+                        <a href="editing.html" class="action-btn">
+                            <i class="fas fa-video mb-2" style="font-size: 1.5rem; color: #10b981;"></i>
+                            <div>New Editing Project</div>
+                        </a>
+                        <a href="clients.html" class="action-btn">
+                            <i class="fas fa-user-plus mb-2" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                            <div>Add Client</div>
+                        </a>
+                        <a href="salary.html" class="action-btn">
+                            <i class="fas fa-money-bill-wave mb-2" style="font-size: 1.5rem; color: #ef4444;"></i>
+                            <div>Manage Salaries</div>
+                        </a>
+                        <a href="workers.html" class="action-btn">
+                            <i class="fas fa-users mb-2" style="font-size: 1.5rem; color: #8b5cf6;"></i>
+                            <div>Manage Team</div>
+                        </a>
+                        <a href="transportation.html" class="action-btn">
+                            <i class="fas fa-truck mb-2" style="font-size: 1.5rem; color: #06b6d4;"></i>
+                            <div>Transportation</div>
+                        </a>
+                    `;
+                }
+            }
+        }
+        
+        // Update user info
+        function updateUserInfo(user) {
+            const userName = `${user.firstName} ${user.lastName}`;
+            const userInitials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+            
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            document.getElementById('userAvatar').textContent = userInitials;
+        }
+        
+        // Load today's alerts based on user role
+        async function loadTodayAlerts() {
+            const alertsContainer = document.getElementById('todayAlerts');
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            
+            // Show loading state
+            alertsContainer.innerHTML = `
+                <div class="alert-card info">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 1.25rem; color: #3b82f6;"></i>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">Loading Today's Alerts</div>
+                            <div style="color: #64748b; font-size: 0.875rem;">Fetching your latest updates...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                // Handle both 'id' and '_id' fields for compatibility
+                const userId = userData._id || userData.id;
+                
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                console.log('Loading alerts with params:', {
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                const response = await fetch(`/api/dashboard/alerts?${params}`);
+                let alerts = [];
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    alerts = data.data || [];
+                } else {
+                    console.error('Failed to fetch alerts:', response.status);
+                    // Fallback alerts
+                    if (userRole === 'owner') {
+                        alerts = [
+                            {
+                                type: 'urgent',
+                                title: 'Orders Ending Today',
+                                message: 'Unable to load specific order details. Please check the orders page.',
+                                icon: 'fas fa-exclamation-triangle'
+                            },
+                            {
+                                type: 'info',
+                                title: 'Editing Projects',
+                                message: 'Unable to load specific project details. Please check the projects page.',
+                                icon: 'fas fa-video'
+                            }
+                        ];
+                    } else {
+                        alerts = [
+                            {
+                                type: 'info',
+                                title: 'Your Work Today',
+                                message: `You have work to complete today. Check your ${userRole.includes('editor') ? 'projects' : 'orders'} page for details.`,
+                                icon: userRole.includes('editor') ? 'fas fa-video' : 'fas fa-box'
+                            }
+                        ];
+                    }
+                }
+                
+                alertsContainer.innerHTML = '';
+                alerts.forEach(alert => {
+                    const alertCard = document.createElement('div');
+                    alertCard.className = `alert-card ${alert.type}`;
+                    
+                    // Truncate long messages for better display
+                    let displayMessage = alert.message;
+                    if (displayMessage.length > 200) {
+                        displayMessage = displayMessage.substring(0, 200) + '...';
+                    }
+                    
+                    alertCard.innerHTML = `
+                        <div style="display: flex; align-items: flex-start; gap: 16px;">
+                            <div style="flex-shrink: 0;">
+                                <i class="${alert.icon}" style="font-size: 1.5rem; color: ${alert.type === 'urgent' ? '#ef4444' : '#3b82f6'};"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; margin-bottom: 8px; font-size: 1.1rem;">${alert.title}</div>
+                                <div style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">${displayMessage}</div>
+                                ${alert.count > 0 ? `<div style="margin-top: 8px;"><span style="background: ${alert.type === 'urgent' ? '#ef4444' : '#3b82f6'}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${alert.count} item${alert.count > 1 ? 's' : ''}</span></div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    alertsContainer.appendChild(alertCard);
+                });
+                
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+                alertsContainer.innerHTML = `
+                    <div class="alert-card urgent">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 1.25rem; color: #ef4444;"></i>
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">Unable to Load Alerts</div>
+                                <div style="color: #64748b; font-size: 0.875rem;">Please refresh the page or check your connection.</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load stats based on user role
+        async function loadStats() {
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            
+            try {
+                if (userRole === 'owner') {
+                    // Owner sees business stats - fetch from API
+                    // Handle both 'id' and '_id' fields for compatibility
+                    const userId = userData._id || userData.id;
+                    
+                    const params = new URLSearchParams({
+                        shopName: userData.shopName,
+                        userRole: userRole,
+                        userId: userId
+                    });
+                    
+                    console.log('Loading stats with params:', {
+                        shopName: userData.shopName,
+                        userRole: userRole,
+                        userId: userId
+                    });
+                    
+                    const response = await fetch(`/api/dashboard/stats?${params}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Stats received:', data.data);
+                        showOwnerStats(data.data);
+                    } else {
+                        // Fallback to orders stats with real data
+                        await showOrdersStats();
+                    }
+                } else {
+                    // Workers/Editors see personal stats
+                    await showPersonalStats(userData);
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // Show fallback stats with real data
+                if (userRole === 'owner') {
+                    await showOrdersStats();
+                } else {
+                    await showPersonalStats(userData);
+                }
+            }
+        }
+        
+        // Show owner business stats
+        function showOwnerStats(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${stats.remainingOrders || 0}</div>
+                    <div class="stat-label">Remaining Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.doneOrders || 0}</div>
+                    <div class="stat-label">Done Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹${(stats.totalPayment || 0).toLocaleString()}</div>
+                    <div class="stat-label">Total Payment</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">₹${(stats.receivedPayment || 0).toLocaleString()}</div>
+                    <div class="stat-label">Received Payment</div>
+                </div>
+            `;
+            
+            // Update remaining payments from clients
+            document.getElementById('remainingPayments').textContent = `₹${(stats.remainingClientPayments || 0).toLocaleString()}`;
+            
+            // Update worker payments
+            document.getElementById('workerPayments').textContent = `₹${(stats.workerPayments || 0).toLocaleString()}`;
+        }
+        
+        // Show personal stats for workers/editors/transporters
+        async function showPersonalStats(user) {
+            const statsGrid = document.getElementById('statsGrid');
+            const userRole = user.role.toLowerCase();
+            
+            try {
+                // Fetch personal stats from dashboard API
+                const userId = user._id || user.id;
+                
+                const params = new URLSearchParams({
+                    shopName: user.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                const response = await fetch(`/api/dashboard/stats?${params}`);
+                let statsData = {
+                    activeOrders: 0,
+                    completedOrders: 0,
+                    activeProjects: 0,
+                    completedProjects: 0,
+                    totalEarnings: 0,
+                    paidSalary: 0,
+                    remainingSalary: 0
+                };
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statsData = data.data;
+                }
+                
+                // Show stats based on user role
+                if (userRole.includes('editor')) {
+                    // Editor stats - focus on projects
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-value">${statsData.activeProjects}</div>
+                            <div class="stat-label">Active Assigned Projects</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${statsData.completedProjects}</div>
+                            <div class="stat-label">Completed Projects</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">₹${statsData.remainingSalary.toLocaleString()}</div>
+                            <div class="stat-label">Pending Payment</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">₹${statsData.totalEarnings.toLocaleString()}</div>
+                            <div class="stat-label">Total Earnings</div>
+                        </div>
+                    `;
+                } else if (userRole.includes('transporter')) {
+                    // Transporter stats - focus on orders
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-value">${statsData.activeOrders}</div>
+                            <div class="stat-label">Active Transport Orders</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${statsData.completedOrders}</div>
+                            <div class="stat-label">Completed Transports</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">₹${statsData.remainingSalary.toLocaleString()}</div>
+                            <div class="stat-label">Pending Payment</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">₹${statsData.totalEarnings.toLocaleString()}</div>
+                            <div class="stat-label">Total Earnings</div>
+                        </div>
+                    `;
+                } else {
+                    // Worker stats - focus on orders
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-value">${statsData.activeOrders}</div>
+                            <div class="stat-label">Active Assigned Orders</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${statsData.completedOrders}</div>
+                            <div class="stat-label">Completed Orders</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">₹${statsData.remainingSalary.toLocaleString()}</div>
+                            <div class="stat-label">Pending Payment</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">₹${statsData.totalEarnings.toLocaleString()}</div>
+                            <div class="stat-label">Total Earnings</div>
+                        </div>
+                    `;
+                }
+                
+                // For multi-role users, show combined stats
+                if (userRole.includes('_')) {
+                    const totalActive = statsData.activeOrders + statsData.activeProjects;
+                    const totalCompleted = statsData.completedOrders + statsData.completedProjects;
+                    
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-value">${totalActive}</div>
+                            <div class="stat-label">Active Assignments</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${totalCompleted}</div>
+                            <div class="stat-label">Completed Work</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">₹${statsData.remainingSalary.toLocaleString()}</div>
+                            <div class="stat-label">Pending Payment</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">₹${statsData.totalEarnings.toLocaleString()}</div>
+                            <div class="stat-label">Total Earnings</div>
+                        </div>
+                    `;
+                }
+                
+                // Update personal payment information if elements exist
+                const myPendingPayment = document.getElementById('myPendingPayment');
+                const myTotalEarnings = document.getElementById('myTotalEarnings');
+                
+                if (myPendingPayment) {
+                    myPendingPayment.textContent = `₹${statsData.remainingSalary.toLocaleString()}`;
+                }
+                
+                if (myTotalEarnings) {
+                    myTotalEarnings.textContent = `₹${statsData.totalEarnings.toLocaleString()}`;
+                }
+                
+            } catch (error) {
+                console.error('Error loading personal stats:', error);
+                // Fallback to static stats
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Active Assignments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Completed Work</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹0</div>
+                        <div class="stat-label">Pending Payment</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹0</div>
+                        <div class="stat-label">Total Earnings</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Show orders stats
+        async function showOrdersStats() {
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const statsGrid = document.getElementById('statsGrid');
+            
+            // Show loading state
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">...</div>
+                    <div class="stat-label">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">...</div>
+                    <div class="stat-label">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">...</div>
+                    <div class="stat-label">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">...</div>
+                    <div class="stat-label">Loading...</div>
+                </div>
+            `;
+            
+            try {
+                // Handle both 'id' and '_id' fields for compatibility
+                const userId = userData._id || userData.id;
+                
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                console.log('Loading orders stats with params:', {
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                // Fetch orders data
+                const ordersResponse = await fetch(`/api/orders?${params}`);
+                let ordersData = [];
+                let totalPayment = 0;
+                let receivedPayment = 0;
+                
+                if (ordersResponse.ok) {
+                    const orders = await ordersResponse.json();
+                    ordersData = orders.data || [];
+                    
+                    // Calculate totals
+                    totalPayment = ordersData.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+                    receivedPayment = ordersData.reduce((sum, order) => sum + (order.receivedPayment || 0), 0);
+                }
+                
+                const remainingOrders = ordersData.filter(order => order.status !== 'completed').length;
+                const completedOrders = ordersData.filter(order => order.status === 'completed').length;
+                
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${remainingOrders}</div>
+                        <div class="stat-label">Remaining Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${completedOrders}</div>
+                        <div class="stat-label">Done Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹${totalPayment.toLocaleString()}</div>
+                        <div class="stat-label">Total Payment</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹${receivedPayment.toLocaleString()}</div>
+                        <div class="stat-label">Received Payment</div>
+                    </div>
+                `;
+                
+                // Update remaining payments
+                const remainingPayment = totalPayment - receivedPayment;
+                document.getElementById('remainingPayments').textContent = `₹${remainingPayment.toLocaleString()}`;
+                
+                // Get worker payments from salary API
+                const salaryResponse = await fetch(`/api/salary?shopName=${encodeURIComponent(userData.shopName)}&userRole=${userRole}&userId=${userId}`);
+                let workerPayments = 0;
+                
+                if (salaryResponse.ok) {
+                    const salaryData = await salaryResponse.json();
+                    workerPayments = salaryData.data.reduce((sum, emp) => sum + (emp.remainingSalary || 0), 0);
+                }
+                
+                document.getElementById('workerPayments').textContent = `₹${workerPayments.toLocaleString()}`;
+                
+            } catch (error) {
+                console.error('Error loading orders stats:', error);
+                // Fallback to static data
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Remaining Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Done Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹0</div>
+                        <div class="stat-label">Total Payment</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹0</div>
+                        <div class="stat-label">Received Payment</div>
+                    </div>
+                `;
+                document.getElementById('remainingPayments').textContent = '₹0';
+                document.getElementById('workerPayments').textContent = '₹0';
+            }
+        }
+        
+        // Show editing stats
+        async function showEditingStats() {
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const statsGrid = document.getElementById('statsGrid');
+            
+            // Show loading state
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">...</div>
+                    <div class="stat-label">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">...</div>
+                    <div class="stat-label">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">...</div>
+                    <div class="stat-label">Loading...</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">...</div>
+                    <div class="stat-label">Loading...</div>
+                </div>
+            `;
+            
+            try {
+                // Handle both 'id' and '_id' fields for compatibility
+                const userId = userData._id || userData.id;
+                
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                console.log('Loading editing stats with params:', {
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                // Fetch editing projects data
+                const projectsResponse = await fetch(`/api/editing?${params}`);
+                let projectsData = [];
+                let totalProjectValue = 0;
+                let totalCommissions = 0;
+                
+                if (projectsResponse.ok) {
+                    const projects = await projectsResponse.json();
+                    projectsData = projects.data || [];
+                    
+                    // Calculate totals
+                    totalProjectValue = projectsData.reduce((sum, project) => sum + (project.totalAmount || 0), 0);
+                    totalCommissions = projectsData.reduce((sum, project) => sum + (project.commissionAmount || 0), 0);
+                }
+                
+                const activeProjects = projectsData.filter(project => project.status !== 'completed').length;
+                const completedProjects = projectsData.filter(project => project.status === 'completed').length;
+                
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${activeProjects}</div>
+                        <div class="stat-label">Active Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${completedProjects}</div>
+                        <div class="stat-label">Completed Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹${totalProjectValue.toLocaleString()}</div>
+                        <div class="stat-label">Total Project Value</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹${totalCommissions.toLocaleString()}</div>
+                        <div class="stat-label">Total Commissions</div>
+                    </div>
+                `;
+                
+                // Update remaining payments section for editing projects
+                document.getElementById('remainingPayments').textContent = `₹${(totalProjectValue - totalCommissions).toLocaleString()}`;
+                
+                // Get editor payments from salary API
+                const salaryResponse = await fetch(`/api/salary?shopName=${encodeURIComponent(userData.shopName)}&userRole=${userRole}&userId=${userId}`);
+                let editorPayments = 0;
+                
+                if (salaryResponse.ok) {
+                    const salaryData = await salaryResponse.json();
+                    editorPayments = salaryData.data
+                        .filter(emp => emp.role && (emp.role.includes('editor')))
+                        .reduce((sum, emp) => sum + (emp.remainingSalary || 0), 0);
+                }
+                
+                document.getElementById('workerPayments').textContent = `₹${editorPayments.toLocaleString()}`;
+                
+            } catch (error) {
+                console.error('Error loading editing stats:', error);
+                // Fallback to static data
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Active Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">-</div>
+                        <div class="stat-label">Completed Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹0</div>
+                        <div class="stat-label">Total Project Value</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">₹0</div>
+                        <div class="stat-label">Total Commissions</div>
+                    </div>
+                `;
+                document.getElementById('remainingPayments').textContent = '₹0';
+                document.getElementById('workerPayments').textContent = '₹0';
+            }
+        }
+        
+        // Toggle functions
+        async function showOrders() {
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            await showOrdersStats();
+        }
+        
+        async function showEditing() {
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            await showEditingStats();
+        }
+        
+        // Toggle user menu
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userMenuDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Logout
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const userMenu = document.querySelector('.user-menu');
+            const dropdown = document.getElementById('userMenuDropdown');
+            
+            if (!userMenu.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

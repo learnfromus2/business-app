@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Client Management - Business Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        
+        /* Hamburger Menu Button (Mobile Only) */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .hamburger-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .hamburger-btn i {
+            font-size: 1.2rem;
+            color: #1e293b;
+            transition: transform 0.2s ease;
+        }
+        
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .mobile-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+        }
+        
+        .sidebar-brand i {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item {
+            margin: 2px 12px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        
+        .nav-link.active {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .dashboard-content {
+            padding: 32px;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .top-header {
+                padding: 16px 20px;
+                padding-left: 70px;
+            }
+            
+            .dashboard-content {
+                padding: 20px 16px;
+            }
+            
+            .page-title {
+                font-size: 1.25rem;
+            }
+            
+            .user-menu {
+                padding: 6px 8px;
+                gap: 8px;
+            }
+            
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+            
+            .user-menu div {
+                display: none;
+            }
+            
+            /* Mobile form optimizations */
+            .modal-dialog {
+                margin: 10px;
+                max-width: calc(100% - 20px);
+            }
+            
+            .btn-create {
+                padding: 10px 16px;
+                font-size: 0.875rem;
+            }
+            
+            .client-card {
+                margin-bottom: 12px;
+                padding: 16px;
+            }
+            
+            .client-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .client-name {
+                font-size: 1rem;
+            }
+            
+            .row > div {
+                margin-bottom: 12px;
+            }
+            
+            .client-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+                margin-right: 12px;
+            }
+            
+            .lifetime-stats {
+                padding: 10px;
+            }
+            
+            .btn {
+                font-size: 0.75rem;
+                padding: 6px 12px;
+            }
+        }
+        
+        /* Prevent body scroll when mobile menu is open */
+        body.mobile-menu-open {
+            overflow: hidden;
+        }
+        
+        /* Client specific styles */
+        .client-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .client-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .client-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .client-name {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+        
+        .client-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .btn-create {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-create:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+        }
+        
+        .payment-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .payment-good {
+            background: #10b981;
+        }
+        
+        .payment-pending {
+            background: #f59e0b;
+        }
+        
+        .payment-overdue {
+            background: #ef4444;
+        }
+        
+        .client-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-right: 16px;
+        }
+        
+        .lifetime-stats {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        
+        .stat-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hamburger Menu Button (Mobile Only) -->
+    <button class="hamburger-btn" id="hamburgerMenu" aria-label="Toggle navigation">
+        <i class="fas fa-bars" id="hamburgerIcon"></i>
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <i class="fas fa-business-time"></i>
+                <span>Business Manager</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav" style="padding: 20px 0;" id="sidebarNav">
+            <div class="nav-item">
+                <a href="index.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="orders.html" class="nav-link">
+                    <i class="fas fa-box"></i>
+                    <span>Orders</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="editing.html" class="nav-link">
+                    <i class="fas fa-video"></i>
+                    <span>Editing Projects</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="transportation.html" class="nav-link">
+                    <i class="fas fa-truck"></i>
+                    <span>Transportation</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="salary.html" class="nav-link">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Salary Management</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="clients.html" class="nav-link active">
+                    <i class="fas fa-users"></i>
+                    <span>Clients</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="workers.html" class="nav-link">
+                    <i class="fas fa-hard-hat"></i>
+                    <span>Workers & Editors</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="page-title">Client Management</div>
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.875rem;" id="userName">Loading...</div>
+                    <div style="font-size: 0.75rem; color: #64748b;" id="userRole">Loading...</div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Action Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Client Database</h3>
+                <button class="btn-create" data-bs-toggle="modal" data-bs-target="#createClientModal">
+                    <i class="fas fa-user-plus me-2"></i> Add Client
+                </button>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="client-card text-center">
+                        <h4 style="color: #10b981;" id="totalClients">12</h4>
+                        <p class="mb-0" style="color: #64748b;">Total Clients</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="client-card text-center">
+                        <h4 style="color: #3b82f6;" id="activeClients">8</h4>
+                        <p class="mb-0" style="color: #64748b;">Active Clients</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="client-card text-center">
+                        <h4 style="color: #f59e0b;" id="totalRevenue">₹5,50,000</h4>
+                        <p class="mb-0" style="color: #64748b;">Total Revenue</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="client-card text-center">
+                        <h4 style="color: #ef4444;" id="pendingPayments">₹75,000</h4>
+                        <p class="mb-0" style="color: #64748b;">Pending Payments</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Clients List -->
+            <div class="row">
+                <div class="col-12">
+                    <h4 class="mb-3">Client Directory</h4>
+                    <div id="clientsList">
+                        <!-- Clients will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Create Client Modal -->
+    <div class="modal fade" id="createClientModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Client</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createClientForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client Name *</label>
+                                <input type="text" class="form-control" id="clientName" placeholder="Full name or company name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client Type *</label>
+                                <select class="form-select" id="clientType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="individual">Individual</option>
+                                    <option value="company">Company</option>
+                                    <option value="wedding">Wedding</option>
+                                    <option value="event">Event Organizer</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="clientEmail" placeholder="client@example.com">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="clientPhone" placeholder="+91 9876543210" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control" id="clientAddress" rows="2" placeholder="Complete address"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Business Category</label>
+                                <select class="form-select" id="businessCategory">
+                                    <option value="">Select Category</option>
+                                    <option value="video_editing">Video Editing</option>
+                                    <option value="led_walls">LED Walls</option>
+                                    <option value="drones">Drones</option>
+                                    <option value="cameras">Cameras</option>
+                                    <option value="mixed">Mixed Services</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Priority Level</label>
+                                <select class="form-select" id="priorityLevel">
+                                    <option value="normal">Normal</option>
+                                    <option value="high">High</option>
+                                    <option value="vip">VIP</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="clientNotes" rows="2" placeholder="Additional notes about the client..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="createClient()">Add Client</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadClients();
+            initializeMobileNavigation();
+        });
+        
+        // Initialize mobile navigation
+        function initializeMobileNavigation() {
+            const hamburgerMenu = document.getElementById('hamburgerMenu');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            
+            if (!hamburgerMenu || !sidebar || !mobileOverlay) return;
+            
+            // Toggle sidebar on hamburger click
+            hamburgerMenu.addEventListener('click', function() {
+                const isOpen = sidebar.classList.contains('mobile-open');
+                
+                if (isOpen) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+            
+            // Close sidebar when overlay is clicked
+            mobileOverlay.addEventListener('click', closeMobileMenu);
+            
+            // Close sidebar when navigation link is clicked (mobile only)
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('.nav-link') && window.innerWidth <= 768) {
+                    closeMobileMenu();
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeMobileMenu();
+                }
+            });
+            
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+                    closeMobileMenu();
+                }
+            });
+            
+            function openMobileMenu() {
+                sidebar.classList.add('mobile-open');
+                mobileOverlay.classList.add('active');
+                hamburgerIcon.className = 'fas fa-times';
+                document.body.classList.add('mobile-menu-open');
+            }
+            
+            function closeMobileMenu() {
+                sidebar.classList.remove('mobile-open');
+                mobileOverlay.classList.remove('active');
+                hamburgerIcon.className = 'fas fa-bars';
+                document.body.classList.remove('mobile-menu-open');
+            }
+        }
+        
+        // Check authentication and setup role-based access
+        function checkAuth() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userData);
+                updateUserInfo(user);
+                setupRoleBasedAccess(user);
+            } catch (error) {
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Setup role-based access control
+        function setupRoleBasedAccess(user) {
+            const userRole = user.role.toLowerCase();
+            
+            if (userRole !== 'owner') {
+                // Redirect non-owners to dashboard
+                showAlert('Access Denied: Only owners can access client management.', 'danger');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                return;
+            }
+        }
+        
+        // Show alert function
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.left = '50%';
+            alertDiv.style.transform = 'translateX(-50%)';
+            alertDiv.style.zIndex = '9999';
+            alertDiv.textContent = message;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                document.body.removeChild(alertDiv);
+            }, 3000);
+        }
+        
+        // Update user info
+        function updateUserInfo(user) {
+            const userName = `${user.firstName} ${user.lastName}`;
+            const userInitials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+            
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            document.getElementById('userAvatar').textContent = userInitials;
+        }
+        
+        // Load clients
+        async function loadClients() {
+            const clientsList = document.getElementById('clientsList');
+            clientsList.innerHTML = '<div class="text-center p-4">Loading clients...</div>';
+            
+            const userData = JSON.parse(localStorage.getItem('user'));
+            
+            try {
+                // Build query parameters for shop-based filtering
+                // Handle both 'id' and '_id' fields for compatibility
+                const userId = userData._id || userData.id;
+                
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: userData.role.toLowerCase(),
+                    userId: userId
+                });
+                
+                console.log('Loading clients with params:', {
+                    shopName: userData.shopName,
+                    userRole: userData.role.toLowerCase(),
+                    userId: userId
+                });
+                
+                const response = await fetch(`/api/clients?${params}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch clients');
+                }
+                
+                const data = await response.json();
+                const clients = data.data || [];
+                
+                console.log('Clients received:', clients.length);
+                
+                clientsList.innerHTML = '';
+                
+                if (clients.length === 0) {
+                    clientsList.innerHTML = `
+                        <div class="text-center p-4" style="color: #64748b;">
+                            <i class="fas fa-users fa-3x mb-3" style="opacity: 0.3;"></i>
+                            <h5>No clients found</h5>
+                            <p>There are no clients in the system at the moment.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Update stats based on loaded data
+                updateClientStats(clients);
+                
+                clients.forEach(client => {
+                    const clientCard = createClientCard(client);
+                    clientsList.appendChild(clientCard);
+                });
+                
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                clientsList.innerHTML = `
+                    <div class="text-center p-4" style="color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <h5>Error Loading Clients</h5>
+                        <p>Unable to load clients from the database. Please try again later.</p>
+                        <button class="btn btn-primary" onclick="loadClients()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Update client statistics
+        function updateClientStats(clients) {
+            const totalClients = clients.length;
+            const activeClients = clients.filter(c => c.paymentStatus !== 'inactive').length;
+            const totalRevenue = clients.reduce((sum, c) => sum + (c.totalPaymentsDue || 0), 0);
+            const pendingPayments = clients.reduce((sum, c) => sum + (c.pendingPayments || 0), 0);
+            
+            document.getElementById('totalClients').textContent = totalClients;
+            document.getElementById('activeClients').textContent = activeClients;
+            document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toLocaleString()}`;
+            document.getElementById('pendingPayments').textContent = `₹${pendingPayments.toLocaleString()}`;
+        }
+        
+        // Create client card
+        function createClientCard(client) {
+            const card = document.createElement('div');
+            card.className = 'client-card';
+            
+            const status = client.paymentStatus || (client.pendingPayments > 0 ? 'pending' : 'paid');
+            const statusClass = `status-${status}`;
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            // Payment indicator
+            let paymentClass = 'payment-good';
+            const pendingAmount = client.pendingPayments || 0;
+            const totalDue = client.totalPaymentsDue || 0;
+            const receivedAmount = totalDue - pendingAmount;
+            
+            if (pendingAmount > 0) {
+                paymentClass = pendingAmount > 50000 ? 'payment-overdue' : 'payment-pending';
+            }
+            
+            // Client initials for avatar
+            const initials = client.name.split(' ').map(n => n.charAt(0)).join('').substring(0, 2).toUpperCase();
+            
+            // Calculate lifetime statistics
+            const lifetimeOrders = client.lifetimeOrders || 0;
+            const lifetimeProjects = client.lifetimeEditingProjects || 0;
+            const lifetimeValue = client.lifetimeValue || (client.totalPaymentsDue || 0);
+            const lastOrderDate = client.orderHistory && client.orderHistory.length > 0 ? 
+                client.orderHistory[client.orderHistory.length - 1].date : 
+                client.createdAt;
+            
+            // Use actual client data
+            const clientType = client.clientType || 'individual';
+            const priority = client.priorityLevel || 'normal';
+            const businessCategory = client.businessCategory || 'mixed';
+
+            // Check if user is owner to show edit button
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const isOwner = userData && userData.role && userData.role.toLowerCase() === 'owner';
+            
+            // Create edit payment button for owners only
+            let editPaymentButton = '';
+            if (isOwner) {
+                editPaymentButton = `
+                    <div class="client-actions mt-3">
+                        <div class="d-flex justify-content-end gap-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editClientPayment('${client._id}', '${client.name}', ${totalDue}, ${receivedAmount})" title="Edit Payment Received">
+                                <i class="fas fa-edit"></i> Edit Payment
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            card.innerHTML = `
+                <div class="client-header">
+                    <div style="display: flex; align-items: center;">
+                        <div class="client-avatar">${initials}</div>
+                        <div>
+                            <div class="client-name">${client.name}</div>
+                            <div style="color: #64748b; font-size: 0.875rem;">
+                                <i class="fas fa-tag me-1"></i>${clientType.charAt(0).toUpperCase() + clientType.slice(1)}
+                                ${priority !== 'normal' ? `<span class="badge bg-warning ms-2">${priority.toUpperCase()}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="client-status ${statusClass}">${statusText}</div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Contact:</strong><br>
+                        <span style="color: #64748b; font-size: 0.875rem;">
+                            <i class="fas fa-phone me-1"></i>${client.phone}<br>
+                            <i class="fas fa-envelope me-1"></i>${client.email || 'No email'}
+                        </span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Business:</strong><br>
+                        <span style="color: #64748b;">${businessCategory.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Last Activity:</strong><br>
+                        <span style="color: #64748b;">${lastOrderDate ? new Date(lastOrderDate).toLocaleDateString() : 'No activity'}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Payment Status:</strong><br>
+                        <span style="color: #64748b;">
+                            <span class="payment-indicator ${paymentClass}"></span>
+                            ${pendingAmount > 0 ? `₹${pendingAmount.toLocaleString()} pending` : 'All clear'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="lifetime-stats">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #1e293b;">Lifetime Statistics & Payments</div>
+                    <div class="stat-item">
+                        <span>Total Orders:</span>
+                        <span style="font-weight: 600;">${lifetimeOrders}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Total Projects:</span>
+                        <span style="font-weight: 600;">${lifetimeProjects}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Total Value:</span>
+                        <span style="font-weight: 600; color: #10b981;">₹${lifetimeValue.toLocaleString()}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Money Received:</span>
+                        <span style="font-weight: 600; color: #10b981;">₹${receivedAmount.toLocaleString()}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Pending Amount:</span>
+                        <span style="font-weight: 600; color: ${pendingAmount > 0 ? '#ef4444' : '#10b981'};">₹${pendingAmount.toLocaleString()}</span>
+                    </div>
+                </div>
+                
+                ${client.address ? `
+                <div class="mt-2">
+                    <strong>Address:</strong><br>
+                    <span style="color: #64748b; font-size: 0.875rem;">${client.address}</span>
+                </div>
+                ` : ''}
+                
+                ${client.notes ? `
+                <div class="mt-2">
+                    <strong>Notes:</strong><br>
+                    <span style="color: #64748b; font-size: 0.875rem;">${client.notes}</span>
+                </div>
+                ` : ''}
+                
+                ${editPaymentButton}
+            `;
+            
+            return card;
+        }
+        
+        // Create client
+        async function createClient() {
+            const form = document.getElementById('createClientForm');
+            
+            // Basic validation
+            const clientName = document.getElementById('clientName').value.trim();
+            const clientType = document.getElementById('clientType').value;
+            const clientPhone = document.getElementById('clientPhone').value.trim();
+            const clientEmail = document.getElementById('clientEmail').value.trim();
+            
+            if (!clientName || !clientType || !clientPhone) {
+                showAlert('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            // Email validation if provided
+            if (clientEmail && !isValidEmail(clientEmail)) {
+                showAlert('Please enter a valid email address', 'warning');
+                return;
+            }
+            
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                if (!userData) {
+                    throw new Error('No user data found');
+                }
+                
+                // Create new client object for API
+                const newClient = {
+                    name: clientName,
+                    email: clientEmail || '', // Allow empty email
+                    phone: clientPhone,
+                    address: document.getElementById('clientAddress').value.trim(),
+                    shopName: userData.shopName, // Associate client with current user's shop
+                    // Additional fields for future use
+                    clientType: clientType,
+                    businessCategory: document.getElementById('businessCategory').value,
+                    priorityLevel: document.getElementById('priorityLevel').value,
+                    notes: document.getElementById('clientNotes').value.trim()
+                };
+                
+                console.log('Creating client:', newClient);
+                
+                // Send to API
+                const response = await fetch('/api/clients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newClient)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to create client');
+                }
+                
+                const result = await response.json();
+                console.log('Client created successfully:', result);
+                
+                // Reload clients list
+                await loadClients();
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createClientModal'));
+                modal.hide();
+                
+                // Reset form
+                form.reset();
+                
+                showAlert('Client added successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error creating client:', error);
+                showAlert(`Failed to create client: ${error.message}`, 'danger');
+            }
+        }
+        
+        // Email validation helper
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Edit client payment function (owners only)
+        async function editClientPayment(clientId, clientName, totalDue, currentReceived) {
+            try {
+                // Fetch client work history
+                const response = await fetch(`/api/clients/${clientId}/work-history`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showAlert(`Error loading work history: ${data.message}`, 'error');
+                    return;
+                }
+                
+                const { client, workHistory } = data;
+                
+                // Create work history HTML
+                let workHistoryHTML = '';
+                if (workHistory && workHistory.length > 0) {
+                    workHistoryHTML = workHistory.map(work => {
+                        const workIcon = work.type === 'order' ? 'fas fa-box' : 'fas fa-video';
+                        const workTypeLabel = work.type === 'order' ? 'Order' : 'Project';
+                        const statusClass = work.status === 'completed' ? 'success' : work.status === 'in_progress' ? 'warning' : 'secondary';
+                        const paymentStatus = work.isPaid ? 'Fully Paid' : 'Pending';
+                        const paymentStatusClass = work.isPaid ? 'success' : 'danger';
+                        
+                        return `
+                            <div class="work-item p-3 mb-3" style="border: 1px solid #e2e8f0; border-radius: 8px; background: ${work.isPaid ? '#f0f9ff' : '#fefefe'};">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="${workIcon} me-2" style="color: #3b82f6;"></i>
+                                        <div>
+                                            <strong>${work.name}</strong>
+                                            <div class="text-muted small">
+                                                ${workTypeLabel} • ${new Date(work.date).toLocaleDateString()}
+                                                <span class="badge bg-${statusClass} ms-2">${work.status.replace('_', ' ').toUpperCase()}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-${paymentStatusClass}">${paymentStatus}</span>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Total Amount:</small><br>
+                                        <strong>₹${work.totalAmount.toLocaleString()}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Received:</small><br>
+                                        <strong style="color: #10b981;">₹${work.receivedPayment.toLocaleString()}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Pending:</small><br>
+                                        <strong style="color: ${work.remainingPayment > 0 ? '#ef4444' : '#10b981'};">₹${work.remainingPayment.toLocaleString()}</strong>
+                                    </div>
+                                </div>
+                                
+                                ${!work.isPaid ? `
+                                    <div class="mt-3">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <input type="number" class="form-control form-control-sm" 
+                                                       id="payment_${work.id}" 
+                                                       placeholder="Enter payment amount" 
+                                                       min="0" 
+                                                       max="${work.remainingPayment}"
+                                                       value="${work.remainingPayment}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button class="btn btn-success btn-sm w-100" 
+                                                        onclick="markWorkAsPaid('${clientId}', '${work.id}', '${work.type}', '${work.name}')">
+                                                    <i class="fas fa-check me-1"></i>Mark as Paid
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <div class="mt-2">
+                                        <small class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>Payment completed
+                                        </small>
+                                    </div>
+                                `}
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    workHistoryHTML = `
+                        <div class="text-center p-4" style="color: #64748b;">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>No orders or projects found for this client.</p>
+                        </div>
+                    `;
+                }
+                
+                // Create modal HTML
+                const modalHTML = `
+                    <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editPaymentModalLabel">
+                                        <i class="fas fa-edit me-2"></i>Payment Management - ${clientName}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <!-- Payment Summary -->
+                                    <div class="mb-4">
+                                        <h6><i class="fas fa-chart-pie me-2"></i>Payment Summary</h6>
+                                        <div class="payment-summary p-3" style="background: #f8f9fa; border-radius: 8px;">
+                                            <div class="row">
+                                                <div class="col-md-4 text-center">
+                                                    <div class="h4 mb-1" style="color: #3b82f6;">₹${client.totalPaymentsDue.toLocaleString()}</div>
+                                                    <small class="text-muted">Total Due</small>
+                                                </div>
+                                                <div class="col-md-4 text-center">
+                                                    <div class="h4 mb-1" style="color: #10b981;">₹${client.receivedPayments.toLocaleString()}</div>
+                                                    <small class="text-muted">Received</small>
+                                                </div>
+                                                <div class="col-md-4 text-center">
+                                                    <div class="h4 mb-1" style="color: #ef4444;">₹${client.pendingPayments.toLocaleString()}</div>
+                                                    <small class="text-muted">Pending</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Work History -->
+                                    <div class="mb-4">
+                                        <h6><i class="fas fa-history me-2"></i>Work History & Payments</h6>
+                                        <div class="work-history" style="max-height: 400px; overflow-y: auto;">
+                                            ${workHistoryHTML}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Bulk Actions -->
+                                    <div class="mb-3">
+                                        <h6><i class="fas fa-tools me-2"></i>Bulk Actions</h6>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <button class="btn btn-outline-success w-100" onclick="markAllAsPaid('${clientId}')">
+                                                    <i class="fas fa-check-double me-1"></i>Mark All as Paid
+                                                </button>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <button class="btn btn-outline-info w-100" onclick="refreshWorkHistory('${clientId}')">
+                                                    <i class="fas fa-sync me-1"></i>Refresh
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="paymentUpdateResult"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Remove existing modal if any
+                const existingModal = document.getElementById('editPaymentModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editPaymentModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error loading client work history:', error);
+                showAlert('Error loading client work history', 'error');
+            }
+        }
+
+        // Update client payment
+        async function updateClientPayment(clientId, totalDue) {
+            const newReceivedAmount = parseFloat(document.getElementById('newReceivedAmount').value) || 0;
+            const paymentNotes = document.getElementById('paymentNotes').value.trim();
+            const resultDiv = document.getElementById('paymentUpdateResult');
+
+            // Validation
+            if (newReceivedAmount < 0) {
+                resultDiv.innerHTML = '<div class="alert alert-danger">Received amount cannot be negative</div>';
+                return;
+            }
+
+            if (newReceivedAmount > totalDue) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Received amount cannot exceed total due amount</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/clients/${clientId}/payment`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        receivedAmount: newReceivedAmount,
+                        notes: paymentNotes
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="alert alert-success">Payment updated successfully!</div>';
+                    
+                    // Close modal after 1 second and refresh clients
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editPaymentModal'));
+                        modal.hide();
+                        loadClients(); // Refresh the client list
+                        showAlert('Client payment updated successfully', 'success');
+                    }, 1000);
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Error updating client payment:', error);
+                resultDiv.innerHTML = '<div class="alert alert-danger">Network error while updating payment</div>';
+            }
+        }
+
+        // Mark specific work as paid
+        async function markWorkAsPaid(clientId, workId, workType, workName) {
+            const paymentInput = document.getElementById(`payment_${workId}`);
+            const paymentAmount = parseFloat(paymentInput.value) || 0;
+            
+            console.log('markWorkAsPaid called with:', { clientId, workId, workType, workName, paymentAmount });
+            
+            if (paymentAmount <= 0) {
+                showAlert('Please enter a valid payment amount', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Mark "${workName}" as paid with amount ₹${paymentAmount.toLocaleString()}?`)) {
+                return;
+            }
+            
+            // Disable the button to prevent double-clicks
+            const button = paymentInput.parentElement.nextElementSibling.querySelector('button');
+            const originalButtonText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+            
+            try {
+                const requestData = {
+                    workType: workType,
+                    receivedAmount: paymentAmount
+                };
+                
+                console.log('Sending request:', {
+                    url: `/api/clients/${clientId}/work/${workId}/payment`,
+                    method: 'PUT',
+                    data: requestData
+                });
+                
+                const response = await fetch(`/api/clients/${clientId}/work/${workId}/payment`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response data:', result);
+
+                if (response.ok) {
+                    showAlert(`${workType.charAt(0).toUpperCase() + workType.slice(1)} payment updated successfully!`, 'success');
+                    
+                    // Refresh the work history without closing the modal
+                    await refreshWorkHistory(clientId);
+                    
+                } else {
+                    console.error('Server error response:', result);
+                    showAlert(`Error: ${result.message}`, 'error');
+                    
+                    // Show detailed error if available
+                    if (result.stack) {
+                        console.error('Server stack trace:', result.stack);
+                    }
+                    
+                    // Re-enable the button
+                    button.disabled = false;
+                    button.innerHTML = originalButtonText;
+                }
+            } catch (error) {
+                console.error('Network error updating work payment:', error);
+                showAlert('Network error while updating payment', 'error');
+                
+                // Re-enable the button
+                button.disabled = false;
+                button.innerHTML = originalButtonText;
+            }
+        }
+
+        // Mark all pending work as paid
+        async function markAllAsPaid(clientId) {
+            if (!confirm('Mark all pending work as fully paid? This will update all unpaid orders and projects.')) {
+                return;
+            }
+            
+            try {
+                // Get all unpaid work items
+                const workItems = document.querySelectorAll('.work-item');
+                const promises = [];
+                
+                workItems.forEach(item => {
+                    const paymentInput = item.querySelector('input[type="number"]');
+                    if (paymentInput) {
+                        const workId = paymentInput.id.replace('payment_', '');
+                        const workType = item.querySelector('.fas.fa-box') ? 'order' : 'project';
+                        const paymentAmount = parseFloat(paymentInput.value) || 0;
+                        
+                        if (paymentAmount > 0) {
+                            promises.push(
+                                fetch(`/api/clients/${clientId}/work/${workId}/payment`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        workType: workType,
+                                        receivedAmount: paymentAmount
+                                    })
+                                })
+                            );
+                        }
+                    }
+                });
+                
+                if (promises.length === 0) {
+                    showAlert('No pending payments to update', 'info');
+                    return;
+                }
+                
+                const results = await Promise.all(promises);
+                const successCount = results.filter(r => r.ok).length;
+                
+                if (successCount === promises.length) {
+                    showAlert(`Successfully updated ${successCount} payments!`, 'success');
+                } else {
+                    showAlert(`Updated ${successCount} out of ${promises.length} payments`, 'warning');
+                }
+                
+                // Refresh the work history
+                refreshWorkHistory(clientId);
+                
+            } catch (error) {
+                console.error('Error updating all payments:', error);
+                showAlert('Error updating payments', 'error');
+            }
+        }
+
+        // Refresh work history
+        async function refreshWorkHistory(clientId) {
+            try {
+                console.log('Refreshing work history for client:', clientId);
+                
+                const response = await fetch(`/api/clients/${clientId}/work-history`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    console.log('Work history refreshed successfully');
+                    
+                    // Update the payment summary in the modal
+                    const summaryDiv = document.querySelector('.payment-summary .row');
+                    if (summaryDiv) {
+                        summaryDiv.innerHTML = `
+                            <div class="col-md-4 text-center">
+                                <div class="h4 mb-1" style="color: #3b82f6;">₹${data.client.totalPaymentsDue.toLocaleString()}</div>
+                                <small class="text-muted">Total Due</small>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="h4 mb-1" style="color: #10b981;">₹${data.client.receivedPayments.toLocaleString()}</div>
+                                <small class="text-muted">Received</small>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="h4 mb-1" style="color: #ef4444;">₹${data.client.pendingPayments.toLocaleString()}</div>
+                                <small class="text-muted">Pending</small>
+                            </div>
+                        `;
+                    }
+                    
+                    // Update the work history section
+                    const workHistoryDiv = document.querySelector('.work-history');
+                    if (workHistoryDiv && data.workHistory) {
+                        let workHistoryHTML = '';
+                        
+                        if (data.workHistory.length > 0) {
+                            workHistoryHTML = data.workHistory.map(work => {
+                                const workIcon = work.type === 'order' ? 'fas fa-box' : 'fas fa-video';
+                                const workTypeLabel = work.type === 'order' ? 'Order' : 'Project';
+                                const statusClass = work.status === 'completed' ? 'success' : work.status === 'in_progress' ? 'warning' : 'secondary';
+                                const paymentStatus = work.isPaid ? 'Fully Paid' : 'Pending';
+                                const paymentStatusClass = work.isPaid ? 'success' : 'danger';
+                                
+                                return `
+                                    <div class="work-item p-3 mb-3" style="border: 1px solid #e2e8f0; border-radius: 8px; background: ${work.isPaid ? '#f0f9ff' : '#fefefe'};">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="${workIcon} me-2" style="color: #3b82f6;"></i>
+                                                <div>
+                                                    <strong>${work.name}</strong>
+                                                    <div class="text-muted small">
+                                                        ${workTypeLabel} • ${new Date(work.date).toLocaleDateString()}
+                                                        <span class="badge bg-${statusClass} ms-2">${work.status.replace('_', ' ').toUpperCase()}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-${paymentStatusClass}">${paymentStatus}</span>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <small class="text-muted">Total Amount:</small><br>
+                                                <strong>₹${work.totalAmount.toLocaleString()}</strong>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted">Received:</small><br>
+                                                <strong style="color: #10b981;">₹${work.receivedPayment.toLocaleString()}</strong>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted">Pending:</small><br>
+                                                <strong style="color: ${work.remainingPayment > 0 ? '#ef4444' : '#10b981'};">₹${work.remainingPayment.toLocaleString()}</strong>
+                                            </div>
+                                        </div>
+                                        
+                                        ${!work.isPaid ? `
+                                            <div class="mt-3">
+                                                <div class="row">
+                                                    <div class="col-md-8">
+                                                        <input type="number" class="form-control form-control-sm" 
+                                                               id="payment_${work.id}" 
+                                                               placeholder="Enter payment amount" 
+                                                               min="0" 
+                                                               max="${work.remainingPayment}"
+                                                               value="${work.remainingPayment}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <button class="btn btn-success btn-sm w-100" 
+                                                                onclick="markWorkAsPaid('${clientId}', '${work.id}', '${work.type}', '${work.name}')">
+                                                            <i class="fas fa-check me-1"></i>Mark as Paid
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ` : `
+                                            <div class="mt-2">
+                                                <small class="text-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Payment completed
+                                                </small>
+                                            </div>
+                                        `}
+                                    </div>
+                                `;
+                            }).join('');
+                        } else {
+                            workHistoryHTML = `
+                                <div class="text-center p-4" style="color: #64748b;">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                    <p>No orders or projects found for this client.</p>
+                                </div>
+                            `;
+                        }
+                        
+                        workHistoryDiv.innerHTML = workHistoryHTML;
+                    }
+                    
+                    // Refresh the main client list in the background
+                    loadClients();
+                    
+                } else {
+                    console.error('Error refreshing work history:', data);
+                    showAlert(`Error refreshing data: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error refreshing work history:', error);
+                showAlert('Error refreshing work history', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

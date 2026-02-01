@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editing Projects - Business Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+        }
+        
+        /* Hamburger Menu Button (Mobile Only) */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .hamburger-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .hamburger-btn i {
+            font-size: 1.2rem;
+            color: #1e293b;
+            transition: transform 0.2s ease;
+        }
+        
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .mobile-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+        }
+        
+        .sidebar-brand i {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-item {
+            margin: 2px 12px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        
+        .nav-link.active {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        
+        .top-header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .dashboard-content {
+            padding: 32px;
+        }
+        
+        /* Project specific styles */
+        .project-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .project-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .project-id {
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .project-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-review {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .btn-create {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-create:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+        
+        .progress-bar-custom {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.3s ease;
+        }
+        
+        .commission-badge {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        /* Completion buttons styling */
+        .completion-buttons {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+        
+        .completion-buttons .btn {
+            font-size: 0.875rem;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        .completion-buttons .btn i {
+            margin-right: 4px;
+        }
+        
+        /* Mobile Responsive Design */
+        @media (max-width: 768px) {
+            .hamburger-btn {
+                display: block;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .top-header {
+                padding: 16px 20px;
+                padding-left: 70px; /* Space for hamburger */
+            }
+            
+            .page-title {
+                font-size: 1.25rem;
+            }
+            
+            .dashboard-content {
+                padding: 20px 16px;
+            }
+            
+            .user-menu {
+                padding: 6px 8px;
+                gap: 8px;
+            }
+            
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+            
+            /* Make stats cards stack on mobile */
+            .row .col-md-3 {
+                margin-bottom: 16px;
+            }
+            
+            /* Project card mobile adjustments */
+            .project-card {
+                padding: 16px;
+            }
+            
+            .project-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .project-id {
+                font-size: 0.9rem;
+            }
+            
+            /* Button adjustments */
+            .btn-create {
+                padding: 10px 16px;
+                font-size: 0.875rem;
+            }
+            
+            /* Modal adjustments */
+            .modal-dialog {
+                margin: 10px;
+            }
+            
+            .modal-body {
+                padding: 16px;
+            }
+            
+            /* Form adjustments */
+            .form-control, .form-select {
+                padding: 10px 12px;
+            }
+            
+            /* Progress bar adjustments */
+            .progress-bar-custom {
+                height: 6px;
+            }
+            
+            /* Commission badge adjustments */
+            .commission-badge {
+                font-size: 0.7rem;
+                padding: 1px 6px;
+            }
+        }
+        
+        /* Tablet adjustments */
+        @media (max-width: 992px) and (min-width: 769px) {
+            .dashboard-content {
+                padding: 24px;
+            }
+            
+            .project-card {
+                padding: 18px;
+            }
+        }
+        
+        /* Small mobile adjustments */
+        @media (max-width: 480px) {
+            .hamburger-btn {
+                top: 0.75rem;
+                left: 0.75rem;
+                padding: 10px;
+            }
+            
+            .top-header {
+                padding: 12px 16px;
+                padding-left: 60px;
+            }
+            
+            .page-title {
+                font-size: 1.1rem;
+            }
+            
+            .dashboard-content {
+                padding: 16px 12px;
+            }
+            
+            .project-card {
+                padding: 12px;
+            }
+            
+            .btn-create {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .user-menu div:last-child {
+                display: none; /* Hide user details on very small screens */
+            }
+            
+            /* Stack form elements on very small screens */
+            .modal-body .row .col-md-6 {
+                margin-bottom: 12px;
+            }
+            
+            .project-id {
+                font-size: 0.8rem;
+            }
+            
+            .commission-badge {
+                display: none; /* Hide on very small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hamburger Menu Button (Mobile Only) -->
+    <button class="hamburger-btn" id="hamburgerBtn">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="sidebar-brand">
+                <i class="fas fa-business-time"></i>
+                <span>Business Manager</span>
+            </a>
+        </div>
+        
+        <nav class="sidebar-nav" style="padding: 20px 0;" id="sidebarNav">
+            <!-- Navigation will be loaded based on role -->
+        </nav>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="page-title">Editing Projects</div>
+            <div class="user-menu">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.875rem;" id="userName">Loading...</div>
+                    <div style="font-size: 0.75rem; color: #64748b;" id="userRole">Loading...</div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Action Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3>Video Editing Projects</h3>
+                <button class="btn-create" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                    <i class="fas fa-plus me-2"></i> Create Project
+                </button>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="project-card text-center">
+                        <h4 style="color: #3b82f6;" id="activeProjects">3</h4>
+                        <p class="mb-0" style="color: #64748b;">Active Projects</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="project-card text-center">
+                        <h4 style="color: #10b981;" id="completedProjects">8</h4>
+                        <p class="mb-0" style="color: #64748b;">Completed Projects</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="project-card text-center">
+                        <h4 style="color: #f59e0b;" id="totalProjectValue">₹2,00,000</h4>
+                        <p class="mb-0" style="color: #64748b;">Total Project Value</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="project-card text-center">
+                        <h4 style="color: #ef4444;" id="totalCommissions">₹30,000</h4>
+                        <p class="mb-0" style="color: #64748b;">Total Commissions</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Projects List -->
+            <div class="row">
+                <div class="col-12">
+                    <h4 class="mb-3">Recent Projects</h4>
+                    <div id="projectsList">
+                        <!-- Projects will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Create Project Modal -->
+    <div class="modal fade" id="createProjectModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Editing Project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createProjectForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client Name *</label>
+                                <select class="form-select" id="clientName" required>
+                                    <option value="">Select Client</option>
+                                    <!-- Clients will be loaded dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Project Name *</label>
+                                <input type="text" class="form-control" id="projectName" placeholder="e.g., Wedding Video Edit" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" id="startDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Date *</label>
+                                <input type="date" class="form-control" id="endDate" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Editor *</label>
+                                <select class="form-select" id="editor" required>
+                                    <option value="">Select Editor</option>
+                                    <!-- Editors will be loaded dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Commission % *</label>
+                                <input type="number" class="form-control" id="commission" min="0" max="100" placeholder="e.g., 15" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Project Value *</label>
+                                <input type="number" class="form-control" id="projectValue" placeholder="Total project amount" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Payment Status</label>
+                                <select class="form-select" id="paymentStatus">
+                                    <option value="pending">Pending</option>
+                                    <option value="partial">Partial</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Project Description *</label>
+                            <textarea class="form-control" id="description" rows="3" placeholder="Describe the editing requirements..." required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="createProject()">Create Project</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mobile Navigation Functions
+        function initializeMobileNavigation() {
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            
+            if (!hamburgerBtn || !sidebar || !mobileOverlay) {
+                console.warn('Mobile navigation elements not found');
+                return;
+            }
+            
+            // Toggle sidebar on hamburger click
+            hamburgerBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMobileSidebar();
+            });
+            
+            // Close sidebar when overlay is clicked
+            mobileOverlay.addEventListener('click', function() {
+                closeMobileSidebar();
+            });
+            
+            // Close sidebar when navigation link is clicked (mobile only)
+            sidebar.addEventListener('click', function(e) {
+                if (e.target.matches('.nav-link') && window.innerWidth <= 768) {
+                    closeMobileSidebar();
+                }
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    closeMobileSidebar();
+                }
+            });
+            
+            // Handle escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+                    closeMobileSidebar();
+                }
+            });
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const isOpen = sidebar.classList.contains('mobile-open');
+            
+            if (isOpen) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        }
+        
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            
+            sidebar.classList.add('mobile-open');
+            mobileOverlay.classList.add('active');
+            
+            // Change hamburger icon to X
+            const icon = hamburgerBtn.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-times';
+            }
+            
+            // Prevent body scroll on mobile
+            if (window.innerWidth <= 768) {
+                document.body.style.overflow = 'hidden';
+            }
+        }
+        
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            
+            sidebar.classList.remove('mobile-open');
+            mobileOverlay.classList.remove('active');
+            
+            // Reset hamburger icon
+            const icon = hamburgerBtn.querySelector('i');
+            if (icon) {
+                icon.className = 'fas fa-bars';
+            }
+            
+            // Restore body scroll
+            document.body.style.overflow = '';
+        }
+        
+        // Projects data will be loaded from database
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMobileNavigation();
+            checkAuth();
+            loadNavigation();
+            loadProjects();
+            setTodayDate();
+            loadDropdownData();
+            
+            // Reset form when modal is opened
+            const createProjectModal = document.getElementById('createProjectModal');
+            createProjectModal.addEventListener('show.bs.modal', function() {
+                resetProjectForm();
+            });
+        });
+        
+        // Reset project form
+        function resetProjectForm() {
+            const form = document.getElementById('createProjectForm');
+            form.reset();
+            setTodayDate();
+        }
+        
+        // Load dropdown data for form
+        async function loadDropdownData() {
+            await Promise.all([
+                loadClients(),
+                loadEditors()
+            ]);
+        }
+        
+        // Load clients for dropdown
+        async function loadClients() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: userData.role,
+                    userId: userData._id || userData.id
+                });
+                
+                console.log('Loading clients for editing with params:', {
+                    shopName: userData.shopName,
+                    userRole: userData.role,
+                    userId: userData._id || userData.id
+                });
+                
+                const response = await fetch(`/api/clients?${params}`);
+                console.log('Clients API response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Clients data received:', data);
+                    
+                    const clientSelect = document.getElementById('clientName');
+                    
+                    // Clear existing options except the first one
+                    clientSelect.innerHTML = '<option value="">Select Client</option>';
+                    
+                    if (data.data && data.data.length > 0) {
+                        data.data.forEach(client => {
+                            const option = document.createElement('option');
+                            option.value = client._id;
+                            option.textContent = client.name;
+                            clientSelect.appendChild(option);
+                        });
+                        console.log(`Loaded ${data.data.length} clients successfully`);
+                    } else {
+                        console.log('No clients found in database');
+                        // Add a message option
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No clients available - Add clients first';
+                        option.disabled = true;
+                        clientSelect.appendChild(option);
+                    }
+                } else {
+                    console.error('Failed to load clients:', response.status);
+                    const data = await response.json();
+                    console.error('Error details:', data);
+                }
+            } catch (error) {
+                console.error('Error loading clients:', error);
+                // Add error message to dropdown
+                const clientSelect = document.getElementById('clientName');
+                clientSelect.innerHTML = '<option value="">Error loading clients</option>';
+            }
+        }
+        
+        // Load editors for dropdown
+        async function loadEditors() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    role: 'editor'
+                });
+                
+                const response = await fetch(`/api/users?${params}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const editors = data.data.filter(user => user.role.includes('editor'));
+                    
+                    const editorSelect = document.getElementById('editor');
+                    
+                    // Clear existing options except the first one
+                    editorSelect.innerHTML = '<option value="">Select Editor</option>';
+                    
+                    if (editors.length > 0) {
+                        editors.forEach(editor => {
+                            const option = document.createElement('option');
+                            option.value = editor._id;
+                            option.textContent = `${editor.firstName} ${editor.lastName}`;
+                            editorSelect.appendChild(option);
+                        });
+                        console.log(`Loaded ${editors.length} editors successfully`);
+                    } else {
+                        console.log('No editors found in database');
+                        // Add a message option
+                        const option = document.createElement('option');
+                        option.value = '';
+                        option.textContent = 'No editors available - Add editors first';
+                        option.disabled = true;
+                        editorSelect.appendChild(option);
+                    }
+                } else {
+                    console.error('Failed to load editors:', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading editors:', error);
+                // Add error message to dropdown
+                const editorSelect = document.getElementById('editor');
+                editorSelect.innerHTML = '<option value="">Error loading editors</option>';
+            }
+        }
+        
+        // Check authentication and setup role-based access
+        function checkAuth() {
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            try {
+                const user = JSON.parse(userData);
+                updateUserInfo(user);
+                setupRoleBasedAccess(user);
+            } catch (error) {
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Setup role-based access control
+        function setupRoleBasedAccess(user) {
+            const userRole = user.role.toLowerCase();
+            
+            // Check if user has access to editing projects
+            if (userRole !== 'owner' && userRole !== 'editor' && userRole !== 'worker_editor') {
+                // Redirect users who don't have access to editing
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            if (userRole !== 'owner') {
+                // Change page title for non-owners
+                document.querySelector('.page-title').textContent = 'My Projects';
+                document.querySelector('h3').textContent = 'My Editing Projects';
+                
+                // Hide create project button for non-owners
+                const createBtn = document.querySelector('.btn-create');
+                if (createBtn) {
+                    createBtn.style.display = 'none';
+                }
+                
+                // Modify stats to show personal stats
+                modifyStatsForRole(user);
+            }
+        }
+        
+        // Load navigation based on user role
+        function loadNavigation() {
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const sidebarNav = document.getElementById('sidebarNav');
+            
+            let navItems = [];
+            
+            // Add navigation items based on role
+            navItems.push({
+                href: 'index.html',
+                icon: 'fas fa-home',
+                text: 'Home',
+                active: false
+            });
+            
+            if (userRole === 'owner' || userRole === 'worker' || userRole === 'transporter_worker' || userRole === 'worker_editor' || userRole === 'editor_worker') {
+                navItems.push({
+                    href: 'orders.html',
+                    icon: 'fas fa-box',
+                    text: 'Orders',
+                    active: false
+                });
+            }
+            
+            if (userRole === 'owner' || userRole === 'editor' || userRole === 'worker_editor') {
+                navItems.push({
+                    href: 'editing.html',
+                    icon: 'fas fa-video',
+                    text: 'Editing Projects',
+                    active: true
+                });
+            }
+            
+            if (userRole === 'owner' || userRole === 'transporter' || userRole === 'transporter_worker') {
+                navItems.push({
+                    href: 'transportation.html',
+                    icon: 'fas fa-truck',
+                    text: 'Transportation',
+                    active: false
+                });
+            }
+            
+            // Salary is available for all roles
+            navItems.push({
+                href: 'salary.html',
+                icon: 'fas fa-money-bill-wave',
+                text: 'Salary Management',
+                active: false
+            });
+            
+            // Owner-only sections
+            if (userRole === 'owner') {
+                navItems.push({
+                    href: 'clients.html',
+                    icon: 'fas fa-users',
+                    text: 'Clients',
+                    active: false
+                });
+                navItems.push({
+                    href: 'workers.html',
+                    icon: 'fas fa-hard-hat',
+                    text: 'Workers & Editors',
+                    active: false
+                });
+            }
+            
+            // Generate navigation HTML
+            sidebarNav.innerHTML = navItems.map(item => `
+                <div class="nav-item">
+                    <a href="${item.href}" class="nav-link ${item.active ? 'active' : ''}">
+                        <i class="${item.icon}"></i>
+                        <span>${item.text}</span>
+                    </a>
+                </div>
+            `).join('');
+        }
+        
+        // Modify stats for non-owner roles
+        function modifyStatsForRole(user) {
+            const userRole = user.role.toLowerCase();
+            
+            if (userRole.includes('editor')) {
+                // Update labels for editors
+                document.querySelector('#activeProjects').parentElement.querySelector('p').textContent = 'My Active Projects';
+                document.querySelector('#completedProjects').parentElement.querySelector('p').textContent = 'My Completed Projects';
+                document.querySelector('#totalProjectValue').parentElement.querySelector('p').textContent = 'My Total Earnings';
+                document.querySelector('#totalCommissions').parentElement.querySelector('p').textContent = 'My Received Payments';
+            } else {
+                // Update labels for other roles involved in projects
+                document.querySelector('#activeProjects').parentElement.querySelector('p').textContent = 'Projects I\'m In';
+                document.querySelector('#completedProjects').parentElement.querySelector('p').textContent = 'My Completed Projects';
+                document.querySelector('#totalProjectValue').parentElement.querySelector('p').textContent = 'My Total Earnings';
+                document.querySelector('#totalCommissions').parentElement.querySelector('p').textContent = 'My Received Payments';
+            }
+            
+            // Note: The actual values will be set by updateProjectStats() when real data loads
+            // These are just placeholder values that will be overridden
+            document.getElementById('activeProjects').textContent = '0';
+            document.getElementById('completedProjects').textContent = '0';
+            document.getElementById('totalProjectValue').textContent = '₹0';
+            document.getElementById('totalCommissions').textContent = '₹0';
+        }
+        
+        // Update user info
+        function updateUserInfo(user) {
+            const userName = `${user.firstName} ${user.lastName}`;
+            const userInitials = `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+            
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userRole').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            document.getElementById('userAvatar').textContent = userInitials;
+        }
+        
+        // Load projects based on user role
+        async function loadProjects() {
+            const projectsList = document.getElementById('projectsList');
+            projectsList.innerHTML = '<div class="text-center p-4">Loading projects...</div>';
+            
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const userRole = userData.role.toLowerCase();
+            const userName = `${userData.firstName} ${userData.lastName}`;
+            
+            try {
+                // Build query parameters for shop-based filtering
+                // Handle both 'id' and '_id' fields for compatibility
+                const userId = userData._id || userData.id;
+                
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                console.log('Loading projects with params:', {
+                    shopName: userData.shopName,
+                    userRole: userRole,
+                    userId: userId
+                });
+                
+                const response = await fetch(`/api/editing?${params}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch projects');
+                }
+                
+                const data = await response.json();
+                let projectsToShow = data.data || [];
+                
+                console.log('Projects received:', projectsToShow.length);
+                
+                projectsList.innerHTML = '';
+                
+                if (projectsToShow.length === 0) {
+                    projectsList.innerHTML = `
+                        <div class="text-center p-4" style="color: #64748b;">
+                            <i class="fas fa-video fa-3x mb-3" style="opacity: 0.3;"></i>
+                            <h5>No projects found</h5>
+                            <p>There are no editing projects ${userRole === 'owner' ? 'in the system' : 'assigned to you'} at the moment.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Update stats based on loaded data
+                await updateProjectStats(projectsToShow, userRole);
+                
+                projectsToShow.forEach(project => {
+                    const projectCard = createProjectCard(project, userRole !== 'owner');
+                    projectsList.appendChild(projectCard);
+                });
+                
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                projectsList.innerHTML = `
+                    <div class="text-center p-4" style="color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <h5>Error Loading Projects</h5>
+                        <p>Unable to load projects from the database. Please try again later.</p>
+                        <button class="btn btn-primary" onclick="loadProjects()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Update project statistics
+        async function updateProjectStats(projects, userRole) {
+            const activeProjects = projects.filter(p => p.status !== 'completed').length;
+            const completedProjects = projects.filter(p => p.status === 'completed').length;
+            
+            if (userRole === 'owner') {
+                // Owner sees total project values and commissions
+                const totalProjectValue = projects.reduce((sum, p) => sum + (p.totalAmount || 0), 0);
+                const totalCommissions = projects.reduce((sum, p) => sum + (p.commissionAmount || 0), 0);
+                
+                document.getElementById('activeProjects').textContent = activeProjects;
+                document.getElementById('completedProjects').textContent = completedProjects;
+                document.getElementById('totalProjectValue').textContent = `₹${totalProjectValue.toLocaleString()}`;
+                document.getElementById('totalCommissions').textContent = `₹${totalCommissions.toLocaleString()}`;
+            } else {
+                // Workers/Editors see their actual salary data from database
+                try {
+                    const userData = JSON.parse(localStorage.getItem('user'));
+                    const userId = userData._id || userData.id;
+                    
+                    const response = await fetch(`/api/salary/my-salary?employeeId=${userId}&shopName=${userData.shopName}&userRole=${userData.role}`);
+                    if (response.ok) {
+                        const salaryData = await response.json();
+                        const data = salaryData.data;
+                        
+                        // Filter editing-related salaries
+                        const editingSalaries = data.salaries.filter(s => s.salaryType === 'editing_work');
+                        const totalEditingEarnings = editingSalaries.reduce((sum, s) => sum + s.amount, 0);
+                        const paidEditingSalary = editingSalaries.filter(s => s.isPaid).reduce((sum, s) => sum + s.amount, 0);
+                        
+                        document.getElementById('activeProjects').textContent = activeProjects;
+                        document.getElementById('completedProjects').textContent = completedProjects;
+                        document.getElementById('totalProjectValue').textContent = `₹${totalEditingEarnings.toLocaleString()}`; // My commission value
+                        document.getElementById('totalCommissions').textContent = `₹${paidEditingSalary.toLocaleString()}`; // My received payments
+                    } else {
+                        // Fallback
+                        document.getElementById('activeProjects').textContent = activeProjects;
+                        document.getElementById('completedProjects').textContent = completedProjects;
+                        document.getElementById('totalProjectValue').textContent = '₹0';
+                        document.getElementById('totalCommissions').textContent = '₹0';
+                    }
+                } catch (error) {
+                    console.error('Error fetching salary data:', error);
+                    document.getElementById('activeProjects').textContent = activeProjects;
+                    document.getElementById('completedProjects').textContent = completedProjects;
+                    document.getElementById('totalProjectValue').textContent = '₹0';
+                    document.getElementById('totalCommissions').textContent = '₹0';
+                }
+            }
+        }
+        
+        // Create project card
+        function createProjectCard(project, isPersonalView = false) {
+            const card = document.createElement('div');
+            card.className = 'project-card';
+            
+            const statusClass = `status-${project.status}`;
+            const statusText = project.status.charAt(0).toUpperCase() + project.status.slice(1);
+            
+            // Get client name
+            const clientName = project.client ? 
+                (typeof project.client === 'object' ? project.client.name : project.client) : 
+                'Unknown Client';
+            
+            // Get editor name
+            let editorName = 'Unknown Editor';
+            if (project.editor) {
+                if (typeof project.editor === 'object') {
+                    editorName = `${project.editor.firstName} ${project.editor.lastName}`;
+                } else {
+                    editorName = project.editor;
+                }
+            }
+            
+            // Calculate commission and earnings
+            let commissionAmount = project.commissionAmount || 0;
+            let commissionDisplay = 'Commission';
+            
+            if (isPersonalView) {
+                commissionDisplay = 'My Earnings';
+                // For personal view, show the commission amount as earnings
+            }
+            
+            const editorDisplay = isPersonalView ? 
+                'Editor' : 
+                `${editorName} <span class="commission-badge ms-2">${project.commissionPercentage || 0}%</span>`;
+            
+            // Calculate progress (if not provided, estimate based on dates)
+            let progress = 0;
+            if (project.status === 'completed') {
+                progress = 100;
+            } else if (project.startDate && project.endDate) {
+                const start = new Date(project.startDate);
+                const end = new Date(project.endDate);
+                const now = new Date();
+                const total = end - start;
+                const elapsed = now - start;
+                progress = Math.max(0, Math.min(100, Math.round((elapsed / total) * 100)));
+            }
+            
+            // Check if user is owner to show completion buttons and delete button
+            const userData = JSON.parse(localStorage.getItem('user'));
+            const isOwner = userData && userData.role && userData.role.toLowerCase() === 'owner';
+            
+            // Create completion buttons for owners
+            let completionButtons = '';
+            if (isOwner && project.status !== 'completed') {
+                completionButtons = `
+                    <div class="completion-buttons">
+                        <div class="d-flex gap-2 flex-wrap">
+                            ${project.status === 'pending' ? `
+                                <button class="btn btn-primary" onclick="updateProjectStatus('${project._id}', 'in_progress')">
+                                    <i class="fas fa-play"></i> Start Project
+                                </button>
+                            ` : ''}
+                            ${project.status === 'in_progress' ? `
+                                <button class="btn btn-success" onclick="updateProjectStatus('${project._id}', 'completed')">
+                                    <i class="fas fa-check"></i> Mark Completed
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Create delete button for owners only
+            let deleteButton = '';
+            if (isOwner && !isPersonalView) {
+                deleteButton = `
+                    <div class="project-actions mt-3">
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteProject('${project._id}', '${project.projectName || 'Untitled Project'}')" title="Delete Project">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            card.innerHTML = `
+                <div class="project-header">
+                    <div class="project-id">${project._id ? project._id.slice(-6).toUpperCase() : 'NEW'} - ${project.projectName || 'Untitled Project'}</div>
+                    <div class="project-status ${statusClass}">${statusText}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Client:</strong><br>
+                        <span style="color: #64748b;">${clientName}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>${isPersonalView ? 'My Role' : 'Editor'}:</strong><br>
+                        <span style="color: #64748b;">${editorDisplay}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Project Value:</strong><br>
+                        <span style="color: #64748b;">₹${(project.totalAmount || 0).toLocaleString()}</span>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>${commissionDisplay}:</strong><br>
+                        <span style="color: #64748b;">₹${commissionAmount.toLocaleString()}</span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <strong>Duration:</strong><br>
+                        <span style="color: #64748b;">
+                            ${project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'} - 
+                            ${project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Progress:</strong><br>
+                        <span style="color: #64748b;">${progress}% Complete</span>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: ${progress}%"></div>
+                        </div>
+                    </div>
+                </div>
+                ${project.description ? `
+                <div class="mt-2">
+                    <strong>Description:</strong><br>
+                    <span style="color: #64748b;">${project.description}</span>
+                </div>
+                ` : ''}
+                ${completionButtons}
+                ${deleteButton}
+            `;
+            
+            return card;
+        }
+        
+        // Set today's date
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            
+            // Set end date to 10 days from today
+            const endDate = new Date();
+            endDate.setDate(endDate.getDate() + 10);
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+        }
+        
+        // Create project
+        async function createProject() {
+            const form = document.getElementById('createProjectForm');
+            
+            // Basic validation
+            const clientId = document.getElementById('clientName').value;
+            const projectName = document.getElementById('projectName').value.trim();
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const editorId = document.getElementById('editor').value;
+            const commission = document.getElementById('commission').value;
+            const projectValue = document.getElementById('projectValue').value;
+            const paymentStatus = document.getElementById('paymentStatus').value;
+            const description = document.getElementById('description').value.trim();
+            
+            if (!clientId || !projectName || !startDate || !endDate || !editorId || !commission || !projectValue || !description) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Validate dates
+            if (new Date(startDate) >= new Date(endDate)) {
+                alert('End date must be after start date');
+                return;
+            }
+            
+            // Validate commission percentage
+            const commissionNum = parseInt(commission);
+            if (commissionNum < 0 || commissionNum > 100) {
+                alert('Commission percentage must be between 0 and 100');
+                return;
+            }
+            
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                
+                // Get or create a valid user ID
+                let createdById = userData._id || userData.id;
+                
+                // If we don't have a valid user ID, use a default one
+                if (!createdById || createdById === 'undefined' || createdById.length !== 24) {
+                    console.log('Invalid user ID, using default user ID');
+                    createdById = '507f1f77bcf86cd799439011';
+                }
+                
+                // Calculate received payment based on status
+                let receivedPayment = 0;
+                if (paymentStatus === 'completed') {
+                    receivedPayment = parseInt(projectValue);
+                } else if (paymentStatus === 'partial') {
+                    receivedPayment = Math.round(parseInt(projectValue) * 0.5);
+                }
+                
+                // Create new project object matching the API expectations
+                const newProject = {
+                    clientId: clientId,
+                    editorId: editorId,
+                    projectName: projectName,
+                    description: description,
+                    totalAmount: parseInt(projectValue),
+                    commissionPercentage: commissionNum,
+                    startDate: startDate,
+                    endDate: endDate,
+                    receivedPayment: receivedPayment,
+                    shopName: userData.shopName || 'Test Shop',
+                    createdBy: createdById
+                };
+                
+                console.log('Sending project data:', newProject);
+                
+                const response = await fetch('/api/editing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newProject)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Server error details:', errorData);
+                    throw new Error(`Server error: ${errorData.message || 'Unknown error'}`);
+                }
+                
+                const result = await response.json();
+                console.log('Project created successfully:', result);
+                
+                // Reload projects
+                await loadProjects();
+                
+                // Close modal and reset form
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createProjectModal'));
+                modal.hide();
+                
+                // Reset form
+                form.reset();
+                setTodayDate();
+                
+                const commissionAmount = Math.round((parseInt(projectValue) * commissionNum) / 100);
+                alert(`Project created successfully!\nProject Value: ₹${parseInt(projectValue).toLocaleString()}\nEditor Commission: ₹${commissionAmount.toLocaleString()} (${commissionNum}%)\nNet Profit: ₹${(parseInt(projectValue) - commissionAmount).toLocaleString()}`);
+                
+            } catch (error) {
+                console.error('Error creating project:', error);
+                alert(`Failed to create project: ${error.message}`);
+            }
+        }
+        
+        // Update project status (owner only)
+        async function updateProjectStatus(projectId, newStatus) {
+            if (!projectId || projectId === 'undefined') {
+                alert('Invalid project ID');
+                return;
+            }
+            
+            const statusText = newStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            if (!confirm(`Are you sure you want to change project status to "${statusText}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/editing/${projectId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update project status');
+                }
+                
+                // Reload projects to show updated status
+                await loadProjects();
+                
+                alert(`Project status updated to: ${statusText}`);
+                
+            } catch (error) {
+                console.error('Error updating project status:', error);
+                alert('Failed to update project status. Please try again.');
+            }
+        }
+
+        // Delete project function (owners only)
+        async function deleteProject(projectId, projectName) {
+            if (!confirm(`Are you sure you want to delete the project "${projectName}"?\n\nThis action cannot be undone and will also delete all related salary entries.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/editing/${projectId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('Project deleted successfully', 'success');
+                    // Refresh the projects list
+                    loadProjects();
+                } else {
+                    showAlert(`Error deleting project: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting project:', error);
+                showAlert('Network error while deleting project', 'error');
+            }
+        }
+
+        // Show alert function
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                if (document.body.contains(alertDiv)) {
+                    document.body.removeChild(alertDiv);
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
