@@ -198,7 +198,7 @@
                 transform: translateX(-100%);
             }
             
-            .sidebar.mobile-open {
+            .sidebar.active {
                 transform: translateX(0);
             }
             
@@ -538,67 +538,7 @@
             loadNavigation();
             loadTransports();
             setTodayDate();
-            initializeMobileNavigation();
         });
-        
-        // Initialize mobile navigation
-        function initializeMobileNavigation() {
-            const hamburgerMenu = document.getElementById('hamburgerMenu');
-            const sidebar = document.getElementById('sidebar');
-            const mobileOverlay = document.getElementById('mobileOverlay');
-            const hamburgerIcon = document.getElementById('hamburgerIcon');
-            
-            if (!hamburgerMenu || !sidebar || !mobileOverlay) return;
-            
-            // Toggle sidebar on hamburger click
-            hamburgerMenu.addEventListener('click', function() {
-                const isOpen = sidebar.classList.contains('mobile-open');
-                
-                if (isOpen) {
-                    closeMobileMenu();
-                } else {
-                    openMobileMenu();
-                }
-            });
-            
-            // Close sidebar when overlay is clicked
-            mobileOverlay.addEventListener('click', closeMobileMenu);
-            
-            // Close sidebar when navigation link is clicked (mobile only)
-            document.addEventListener('click', function(e) {
-                if (e.target.matches('.nav-link') && window.innerWidth <= 768) {
-                    closeMobileMenu();
-                }
-            });
-            
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    closeMobileMenu();
-                }
-            });
-            
-            // Handle escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
-                    closeMobileMenu();
-                }
-            });
-            
-            function openMobileMenu() {
-                sidebar.classList.add('mobile-open');
-                mobileOverlay.classList.add('active');
-                hamburgerIcon.className = 'fas fa-times';
-                document.body.classList.add('mobile-menu-open');
-            }
-            
-            function closeMobileMenu() {
-                sidebar.classList.remove('mobile-open');
-                mobileOverlay.classList.remove('active');
-                hamburgerIcon.className = 'fas fa-bars';
-                document.body.classList.remove('mobile-menu-open');
-            }
-        }
         
         // Check authentication and setup role-based access
         function checkAuth() {
@@ -757,8 +697,8 @@
             
             try {
                 // Build query parameters for shop-based filtering
-                // Handle both 'id' and '_id' fields for compatibility
-                const userId = userData._id || userData.id;
+                // Use Firebase UID first, then fallback to MongoDB _id for compatibility
+                const userId = userData.firebaseUID || userData._id || userData.id;
                 
                 const params = new URLSearchParams({
                     shopName: userData.shopName,
@@ -830,7 +770,7 @@
                 // Transporters see their actual salary data from database
                 try {
                     const userData = JSON.parse(localStorage.getItem('user'));
-                    const userId = userData._id || userData.id;
+                    const userId = userData.firebaseUID || userData._id || userData.id;
                     
                     const response = await fetch(`/api/salary/my-salary?employeeId=${userId}&shopName=${userData.shopName}&userRole=${userData.role}`);
                     if (response.ok) {
@@ -1139,6 +1079,54 @@
                 alert('Failed to complete order. Please try again.');
             }
         }
+    </script>
+    
+    <!-- Hamburger Menu JavaScript -->
+    <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerBtn = document.getElementById('hamburgerMenu');
+            const sidebar = document.querySelector('.sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                mobileOverlay.classList.toggle('active');
+                
+                // Toggle hamburger icon
+                if (sidebar.classList.contains('active')) {
+                    hamburgerIcon.className = 'fas fa-times';
+                } else {
+                    hamburgerIcon.className = 'fas fa-bars';
+                }
+            }
+            
+            // Toggle sidebar when hamburger button is clicked
+            hamburgerBtn.addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when overlay is clicked
+            mobileOverlay.addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when a nav link is clicked (mobile)
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        toggleSidebar();
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('active');
+                    mobileOverlay.classList.remove('active');
+                    hamburgerIcon.className = 'fas fa-bars';
+                }
+            });
+        });
     </script>
 </body>
 </html>

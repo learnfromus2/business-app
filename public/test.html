@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Manager - Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .info { border-color: #17a2b8; background: #d1ecf1; }
+    </style>
+</head>
+<body>
+    <h1>Business Manager - Test & Debug Page</h1>
+    
+    <div class="test-section">
+        <h2>🔧 System Status</h2>
+        <button class="test-button" onclick="checkSystemStatus()">Check System Status</button>
+        <div id="systemStatus" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔐 Authentication Test</h2>
+        <button class="test-button" onclick="testAuth()">Test Auth Endpoints</button>
+        <button class="test-button" onclick="checkLocalStorage()">Check LocalStorage</button>
+        <div id="authResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Dashboard API Test</h2>
+        <button class="test-button" onclick="testDashboardAlerts()">Test Alerts API</button>
+        <button class="test-button" onclick="testDashboardStats()">Test Stats API</button>
+        <div id="dashboardResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🗄️ Database Test</h2>
+        <button class="test-button" onclick="testDatabase()">Test Database Connection</button>
+        <button class="test-button" onclick="testUserLookup()">Test User Lookup</button>
+        <div id="databaseResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚀 Quick Actions</h2>
+        <button class="test-button" onclick="clearLocalStorage()">Clear LocalStorage</button>
+        <button class="test-button" onclick="goToLogin()">Go to Login</button>
+        <button class="test-button" onclick="goToDashboard()">Go to Dashboard</button>
+    </div>
+
+    <script>
+        // System Status Check
+        async function checkSystemStatus() {
+            const result = document.getElementById('systemStatus');
+            result.textContent = 'Checking system status...';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                result.className = 'result success';
+                result.textContent = `✅ System Status: ${data.status}
+Database: ${data.database}
+Timestamp: ${data.timestamp}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ System Error: ${error.message}`;
+            }
+        }
+
+        // Authentication Test
+        async function testAuth() {
+            const result = document.getElementById('authResult');
+            result.textContent = 'Testing authentication endpoints...';
+            
+            try {
+                // Test shops endpoint
+                const shopsResponse = await fetch('/api/auth/shops');
+                const shops = await shopsResponse.json();
+                
+                result.className = 'result success';
+                result.textContent = `✅ Auth Endpoints Working
+Shops loaded: ${shops.length}
+Shop names: ${shops.map(s => s.name).join(', ')}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Auth Error: ${error.message}`;
+            }
+        }
+
+        // Check LocalStorage
+        function checkLocalStorage() {
+            const result = document.getElementById('authResult');
+            const userData = localStorage.getItem('user');
+            
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    result.className = 'result info';
+                    result.textContent = `📋 User Data Found:
+Name: ${user.firstName} ${user.lastName}
+Email: ${user.email}
+Role: ${user.role}
+Shop: ${user.shopName}
+MongoDB ID: ${user._id}
+Firebase UID: ${user.firebaseUID || 'Not set'}`;
+                } catch (error) {
+                    result.className = 'result error';
+                    result.textContent = `❌ Invalid user data in localStorage: ${error.message}`;
+                }
+            } else {
+                result.className = 'result info';
+                result.textContent = '📋 No user data in localStorage (not logged in)';
+            }
+        }
+
+        // Dashboard API Test
+        async function testDashboardAlerts() {
+            const result = document.getElementById('dashboardResult');
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!userData._id) {
+                result.className = 'result error';
+                result.textContent = '❌ No user logged in. Please login first.';
+                return;
+            }
+
+            result.textContent = 'Testing dashboard alerts...';
+            
+            try {
+                const params = new URLSearchParams({
+                    shopName: userData.shopName || 'test',
+                    userRole: userData.role || 'worker',
+                    userId: userData.firebaseUID || userData._id || 'test'
+                });
+                
+                const response = await fetch(`/api/dashboard/alerts?${params}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ Dashboard Alerts Working
+Alerts count: ${data.data?.length || 0}
+Sample alert: ${data.data?.[0]?.title || 'None'}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ Dashboard Alerts Error: ${data.message || response.statusText}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Dashboard Error: ${error.message}`;
+            }
+        }
+
+        // Dashboard Stats Test
+        async function testDashboardStats() {
+            const result = document.getElementById('dashboardResult');
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!userData._id) {
+                result.className = 'result error';
+                result.textContent = '❌ No user logged in. Please login first.';
+                return;
+            }
+
+            result.textContent = 'Testing dashboard stats...';
+            
+            try {
+                const params = new URLSearchParams({
+                    shopName: userData.shopName || 'test',
+                    userRole: userData.role || 'worker',
+                    userId: userData.firebaseUID || userData._id || 'test'
+                });
+                
+                const response = await fetch(`/api/dashboard/stats?${params}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.className = 'result success';
+                    result.textContent = `✅ Dashboard Stats Working
+Active Orders: ${data.data?.activeOrders || 0}
+Completed Orders: ${data.data?.completedOrders || 0}
+Total Earnings: ${data.data?.totalEarnings || 0}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ Dashboard Stats Error: ${data.message || response.statusText}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Dashboard Error: ${error.message}`;
+            }
+        }
+
+        // Database Test
+        async function testDatabase() {
+            const result = document.getElementById('databaseResult');
+            result.textContent = 'Testing database connection...';
+            
+            try {
+                const response = await fetch('/api/test/data');
+                const data = await response.json();
+                
+                result.className = 'result success';
+                result.textContent = `✅ Database Connected
+Users: ${data.counts?.users || 0}
+Orders: ${data.counts?.orders || 0}
+Projects: ${data.counts?.projects || 0}
+Clients: ${data.counts?.clients || 0}`;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Database Error: ${error.message}`;
+            }
+        }
+
+        // Test User Lookup
+        async function testUserLookup() {
+            const result = document.getElementById('databaseResult');
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!userData.email) {
+                result.className = 'result error';
+                result.textContent = '❌ No user email found. Please login first.';
+                return;
+            }
+
+            result.textContent = 'Testing user lookup...';
+            
+            try {
+                const response = await fetch(`/api/auth/user/${userData.email}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.className = 'result success';
+                    result.textContent = `✅ User Found in Database
+Name: ${data.user.firstName} ${data.user.lastName}
+Email: ${data.user.email}
+Role: ${data.user.role}
+Shop: ${data.user.shopName}`;
+                } else {
+                    result.className = 'result error';
+                    result.textContent = `❌ User Not Found: ${response.status} ${response.statusText}`;
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ User Lookup Error: ${error.message}`;
+            }
+        }
+
+        // Quick Actions
+        function clearLocalStorage() {
+            localStorage.clear();
+            alert('LocalStorage cleared! You are now logged out.');
+        }
+
+        function goToLogin() {
+            window.location.href = '/login.html';
+        }
+
+        function goToDashboard() {
+            window.location.href = '/index.html';
+        }
+
+        // Auto-run system check on page load
+        window.addEventListener('load', () => {
+            checkSystemStatus();
+            checkLocalStorage();
+        });
+    </script>
+</body>
+</html>

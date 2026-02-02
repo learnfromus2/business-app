@@ -411,4 +411,255 @@ router.put('/:clientId/work/:workId/payment', async (req, res) => {
   }
 });
 
+// Bulk payment update for multiple works
+router.put('/:clientId/bulk-payment', async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { payments } = req.body; // Array of { workId, workType, amount }
+    
+    console.log('Bulk payment update request:', { clientId, payments });
+    
+    if (!payments || !Array.isArray(payments) || payments.length === 0) {
+      return res.status(400).json({ message: 'No payments provided' });
+    }
+    
+    const results = [];
+    let totalUpdated = 0;
+    
+    // Process each payment
+    for (const payment of payments) {
+      try {
+        const { workId, workType, amount } = payment;
+        
+        if (!workId || !workType || amount === undefined) {
+          results.push({ workId, error: 'Missing required fields' });
+          continue;
+        }
+        
+        const paymentAmount = parseFloat(amount);
+        if (isNaN(paymentAmount) || paymentAmount < 0) {
+          results.push({ workId, error: 'Invalid amount' });
+          continue;
+        }
+        
+        let work;
+        if (workType === 'order') {
+          work = await Order.findById(workId);
+          if (work && paymentAmount <= work.totalAmount) {
+            await Order.findByIdAndUpdate(workId, {
+              receivedPayment: paymentAmount,
+              remainingPayment: work.totalAmount - paymentAmount
+            });
+            results.push({ workId, success: true, amount: paymentAmount });
+            totalUpdated++;
+          } else {
+            results.push({ workId, error: work ? 'Amount exceeds total' : 'Order not found' });
+          }
+        } else if (workType === 'project') {
+          work = await EditingProject.findById(workId);
+          if (work && paymentAmount <= work.totalAmount) {
+            await EditingProject.findByIdAndUpdate(workId, {
+              receivedPayment: paymentAmount,
+              remainingPayment: work.totalAmount - paymentAmount
+            });
+            results.push({ workId, success: true, amount: paymentAmount });
+            totalUpdated++;
+          } else {
+            results.push({ workId, error: work ? 'Amount exceeds total' : 'Project not found' });
+          }
+        } else {
+          results.push({ workId, error: 'Invalid work type' });
+        }
+      } catch (error) {
+        results.push({ workId: payment.workId, error: error.message });
+      }
+    }
+    
+    // Update client totals if any payments were successful
+    if (totalUpdated > 0) {
+      const client = await Client.findById(clientId);
+      if (client) {
+        const orders = await Order.find({ client: clientId });
+        const projects = await EditingProject.find({ client: clientId });
+        
+        let totalDue = 0;
+        let totalReceived = 0;
+        
+        orders.forEach(order => {
+          totalDue += order.totalAmount || 0;
+          totalReceived += order.receivedPayment || 0;
+        });
+        
+        projects.forEach(project => {
+          totalDue += project.totalAmount || 0;
+          totalReceived += project.receivedPayment || 0;
+        });
+        
+        await Client.findByIdAndUpdate(clientId, {
+          totalPaymentsDue: totalDue,
+          receivedPayments: totalReceived,
+          pendingPayments: Math.max(0, totalDue - totalReceived),
+          paymentStatus: totalDue === 0 ? 'pending' : 
+                       totalReceived >= totalDue ? 'paid' : 
+                       totalReceived > 0 ? 'partial' : 'pending'
+        });
+      }
+    }
+    
+    res.json({
+      message: `Bulk payment update completed. ${totalUpdated} payments updated successfully.`,
+      results,
+      totalUpdated
+    });
+    
+  } catch (error) {
+    console.error('Error in bulk payment update:', error);
+    res.status(500).json({ message: 'Server error during bulk payment update' });
+  }
+});
+
+// Quick payment actions
+router.put('/:clientId/quick-payment', async (req, res) => {
+  try {
+    const { clientId } = req.params;
+    const { action, amount } = req.body; // action: 'mark-all-paid', 'add-payment', 'clear-payments'
+    
+    console.log('Quick payment action:', { clientId, action, amount });
+    
+    const client = await Client.findById(clientId);
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+    
+    const orders = await Order.find({ client: clientId });
+    const projects = await EditingProject.find({ client: clientId });
+    
+    let updatedCount = 0;
+    
+    if (action === 'mark-all-paid') {
+      // Mark all orders and projects as fully paid
+      for (const order of orders) {
+        if (order.receivedPayment < order.totalAmount) {
+          await Order.findByIdAndUpdate(order._id, {
+            receivedPayment: order.totalAmount,
+            remainingPayment: 0
+          });
+          updatedCount++;
+        }
+      }
+      
+      for (const project of projects) {
+        if (project.receivedPayment < project.totalAmount) {
+          await EditingProject.findByIdAndUpdate(project._id, {
+            receivedPayment: project.totalAmount,
+            remainingPayment: 0
+          });
+          updatedCount++;
+        }
+      }
+      
+    } else if (action === 'clear-payments') {
+      // Clear all payments
+      for (const order of orders) {
+        if (order.receivedPayment > 0) {
+          await Order.findByIdAndUpdate(order._id, {
+            receivedPayment: 0,
+            remainingPayment: order.totalAmount
+          });
+          updatedCount++;
+        }
+      }
+      
+      for (const project of projects) {
+        if (project.receivedPayment > 0) {
+          await EditingProject.findByIdAndUpdate(project._id, {
+            receivedPayment: 0,
+            remainingPayment: project.totalAmount
+          });
+          updatedCount++;
+        }
+      }
+      
+    } else if (action === 'add-payment' && amount) {
+      // Distribute payment across unpaid works
+      const paymentAmount = parseFloat(amount);
+      if (isNaN(paymentAmount) || paymentAmount <= 0) {
+        return res.status(400).json({ message: 'Invalid payment amount' });
+      }
+      
+      let remainingAmount = paymentAmount;
+      
+      // First pay orders
+      for (const order of orders) {
+        if (remainingAmount <= 0) break;
+        const unpaid = order.totalAmount - (order.receivedPayment || 0);
+        if (unpaid > 0) {
+          const payThis = Math.min(unpaid, remainingAmount);
+          await Order.findByIdAndUpdate(order._id, {
+            receivedPayment: (order.receivedPayment || 0) + payThis,
+            remainingPayment: order.totalAmount - ((order.receivedPayment || 0) + payThis)
+          });
+          remainingAmount -= payThis;
+          updatedCount++;
+        }
+      }
+      
+      // Then pay projects
+      for (const project of projects) {
+        if (remainingAmount <= 0) break;
+        const unpaid = project.totalAmount - (project.receivedPayment || 0);
+        if (unpaid > 0) {
+          const payThis = Math.min(unpaid, remainingAmount);
+          await EditingProject.findByIdAndUpdate(project._id, {
+            receivedPayment: (project.receivedPayment || 0) + payThis,
+            remainingPayment: project.totalAmount - ((project.receivedPayment || 0) + payThis)
+          });
+          remainingAmount -= payThis;
+          updatedCount++;
+        }
+      }
+    }
+    
+    // Update client totals
+    let totalDue = 0;
+    let totalReceived = 0;
+    
+    const updatedOrders = await Order.find({ client: clientId });
+    const updatedProjects = await EditingProject.find({ client: clientId });
+    
+    updatedOrders.forEach(order => {
+      totalDue += order.totalAmount || 0;
+      totalReceived += order.receivedPayment || 0;
+    });
+    
+    updatedProjects.forEach(project => {
+      totalDue += project.totalAmount || 0;
+      totalReceived += project.receivedPayment || 0;
+    });
+    
+    await Client.findByIdAndUpdate(clientId, {
+      totalPaymentsDue: totalDue,
+      receivedPayments: totalReceived,
+      pendingPayments: Math.max(0, totalDue - totalReceived),
+      paymentStatus: totalDue === 0 ? 'pending' : 
+                   totalReceived >= totalDue ? 'paid' : 
+                   totalReceived > 0 ? 'partial' : 'pending'
+    });
+    
+    res.json({
+      message: `Quick payment action '${action}' completed successfully.`,
+      updatedCount,
+      client: {
+        totalDue,
+        totalReceived,
+        pendingPayments: Math.max(0, totalDue - totalReceived)
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error in quick payment action:', error);
+    res.status(500).json({ message: 'Server error during quick payment action' });
+  }
+});
+
 module.exports = router;

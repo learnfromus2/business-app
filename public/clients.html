@@ -198,7 +198,7 @@
                 transform: translateX(-100%);
             }
             
-            .sidebar.mobile-open {
+            .sidebar.active {
                 transform: translateX(0);
             }
             
@@ -631,67 +631,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
             loadClients();
-            initializeMobileNavigation();
         });
-        
-        // Initialize mobile navigation
-        function initializeMobileNavigation() {
-            const hamburgerMenu = document.getElementById('hamburgerMenu');
-            const sidebar = document.getElementById('sidebar');
-            const mobileOverlay = document.getElementById('mobileOverlay');
-            const hamburgerIcon = document.getElementById('hamburgerIcon');
-            
-            if (!hamburgerMenu || !sidebar || !mobileOverlay) return;
-            
-            // Toggle sidebar on hamburger click
-            hamburgerMenu.addEventListener('click', function() {
-                const isOpen = sidebar.classList.contains('mobile-open');
-                
-                if (isOpen) {
-                    closeMobileMenu();
-                } else {
-                    openMobileMenu();
-                }
-            });
-            
-            // Close sidebar when overlay is clicked
-            mobileOverlay.addEventListener('click', closeMobileMenu);
-            
-            // Close sidebar when navigation link is clicked (mobile only)
-            document.addEventListener('click', function(e) {
-                if (e.target.matches('.nav-link') && window.innerWidth <= 768) {
-                    closeMobileMenu();
-                }
-            });
-            
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                if (window.innerWidth > 768) {
-                    closeMobileMenu();
-                }
-            });
-            
-            // Handle escape key
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
-                    closeMobileMenu();
-                }
-            });
-            
-            function openMobileMenu() {
-                sidebar.classList.add('mobile-open');
-                mobileOverlay.classList.add('active');
-                hamburgerIcon.className = 'fas fa-times';
-                document.body.classList.add('mobile-menu-open');
-            }
-            
-            function closeMobileMenu() {
-                sidebar.classList.remove('mobile-open');
-                mobileOverlay.classList.remove('active');
-                hamburgerIcon.className = 'fas fa-bars';
-                document.body.classList.remove('mobile-menu-open');
-            }
-        }
         
         // Check authentication and setup role-based access
         function checkAuth() {
@@ -1190,18 +1130,58 @@
                                     
                                     <!-- Bulk Actions -->
                                     <div class="mb-3">
-                                        <h6><i class="fas fa-tools me-2"></i>Bulk Actions</h6>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <button class="btn btn-outline-success w-100" onclick="markAllAsPaid('${clientId}')">
-                                                    <i class="fas fa-check-double me-1"></i>Mark All as Paid
+                                        <h6><i class="fas fa-tools me-2"></i>Quick Payment Actions</h6>
+                                        <div class="row g-2">
+                                            <div class="col-md-3">
+                                                <button class="btn btn-success w-100 btn-sm" onclick="quickPaymentAction('${clientId}', 'mark-all-paid')">
+                                                    <i class="fas fa-check-double me-1"></i>Mark All Paid
                                                 </button>
                                             </div>
-                                            <div class="col-md-6">
-                                                <button class="btn btn-outline-info w-100" onclick="refreshWorkHistory('${clientId}')">
+                                            <div class="col-md-3">
+                                                <button class="btn btn-warning w-100 btn-sm" onclick="quickPaymentAction('${clientId}', 'clear-payments')">
+                                                    <i class="fas fa-times-circle me-1"></i>Clear All
+                                                </button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button class="btn btn-info w-100 btn-sm" onclick="refreshWorkHistory('${clientId}')">
                                                     <i class="fas fa-sync me-1"></i>Refresh
                                                 </button>
                                             </div>
+                                            <div class="col-md-3">
+                                                <button class="btn btn-primary w-100 btn-sm" onclick="showBulkPaymentForm('${clientId}')">
+                                                    <i class="fas fa-layer-group me-1"></i>Bulk Edit
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Quick Add Payment -->
+                                        <div class="mt-3">
+                                            <div class="input-group">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" class="form-control" id="quickPaymentAmount" placeholder="Enter amount to distribute" min="0" step="0.01">
+                                                <button class="btn btn-outline-primary" onclick="addQuickPayment('${clientId}')">
+                                                    <i class="fas fa-plus me-1"></i>Add Payment
+                                                </button>
+                                            </div>
+                                            <small class="text-muted">This amount will be distributed across unpaid orders and projects</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Bulk Payment Form (Hidden by default) -->
+                                    <div id="bulkPaymentForm" style="display: none;" class="mb-3">
+                                        <h6><i class="fas fa-edit me-2"></i>Bulk Payment Editor</h6>
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Select multiple items and update their payments at once. Leave amount empty to skip an item.
+                                        </div>
+                                        <div id="bulkPaymentItems"></div>
+                                        <div class="mt-3">
+                                            <button class="btn btn-success me-2" onclick="processBulkPayment('${clientId}')">
+                                                <i class="fas fa-save me-1"></i>Save All Changes
+                                            </button>
+                                            <button class="btn btn-secondary" onclick="hideBulkPaymentForm()">
+                                                <i class="fas fa-times me-1"></i>Cancel
+                                            </button>
                                         </div>
                                     </div>
                                     
@@ -1417,6 +1397,279 @@
             }
         }
 
+        // Quick payment actions using new API endpoints
+        async function quickPaymentAction(clientId, action) {
+            let confirmMessage = '';
+            switch(action) {
+                case 'mark-all-paid':
+                    confirmMessage = 'Mark all orders and projects as fully paid?';
+                    break;
+                case 'clear-payments':
+                    confirmMessage = 'Clear all payments? This will reset all received amounts to zero.';
+                    break;
+                default:
+                    return;
+            }
+            
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/clients/${clientId}/quick-payment`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`${result.message} (${result.updatedCount} items updated)`, 'success');
+                    refreshWorkHistory(clientId);
+                } else {
+                    showAlert(result.message || 'Error performing quick action', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error in quick payment action:', error);
+                showAlert('Error performing quick action', 'error');
+            }
+        }
+
+        // Add quick payment (distribute amount across unpaid work)
+        async function addQuickPayment(clientId) {
+            const amountInput = document.getElementById('quickPaymentAmount');
+            const amount = parseFloat(amountInput.value);
+            
+            if (!amount || amount <= 0) {
+                showAlert('Please enter a valid payment amount', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Distribute ₹${amount.toLocaleString()} across unpaid orders and projects?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/clients/${clientId}/quick-payment`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        action: 'add-payment',
+                        amount: amount
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`${result.message} (${result.updatedCount} items updated)`, 'success');
+                    amountInput.value = '';
+                    refreshWorkHistory(clientId);
+                } else {
+                    showAlert(result.message || 'Error adding payment', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error adding quick payment:', error);
+                showAlert('Error adding payment', 'error');
+            }
+        }
+
+        // Show bulk payment form
+        function showBulkPaymentForm(clientId) {
+            const form = document.getElementById('bulkPaymentForm');
+            const itemsContainer = document.getElementById('bulkPaymentItems');
+            
+            // Get all work items
+            const workItems = document.querySelectorAll('.work-item');
+            let bulkHTML = '';
+            
+            workItems.forEach((item, index) => {
+                const nameElement = item.querySelector('strong');
+                const amountElement = item.querySelector('.text-muted');
+                const paymentInput = item.querySelector('input[type="number"]');
+                
+                if (nameElement && paymentInput) {
+                    const workName = nameElement.textContent;
+                    const workId = paymentInput.id.replace('payment_', '');
+                    const workType = item.querySelector('.fas.fa-box') ? 'order' : 'project';
+                    const currentAmount = paymentInput.value || '0';
+                    const maxAmount = paymentInput.max || '0';
+                    
+                    bulkHTML += `
+                        <div class="row align-items-center mb-2 p-2" style="background: #f8f9fa; border-radius: 6px;">
+                            <div class="col-md-1">
+                                <input type="checkbox" class="form-check-input bulk-item-checkbox" 
+                                       data-work-id="${workId}" data-work-type="${workType}" 
+                                       id="bulk_${workId}">
+                            </div>
+                            <div class="col-md-5">
+                                <label for="bulk_${workId}" class="form-check-label">
+                                    <i class="fas fa-${workType === 'order' ? 'box' : 'video'} me-1"></i>
+                                    <strong>${workName}</strong>
+                                </label>
+                                <div class="small text-muted">Max: ₹${parseFloat(maxAmount).toLocaleString()}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" class="form-control bulk-payment-input" 
+                                           id="bulk_amount_${workId}" value="${currentAmount}" 
+                                           min="0" max="${maxAmount}" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-primary btn-sm w-100" 
+                                        onclick="setBulkAmount('${workId}', ${maxAmount})">
+                                    <i class="fas fa-fill"></i> Max
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            itemsContainer.innerHTML = bulkHTML;
+            form.style.display = 'block';
+            
+            // Add select all functionality
+            const selectAllHTML = `
+                <div class="mb-3 p-2" style="background: #e3f2fd; border-radius: 6px;">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="selectAllBulk" onchange="toggleAllBulkItems()">
+                        <label class="form-check-label fw-bold" for="selectAllBulk">
+                            Select All Items
+                        </label>
+                        <div class="mt-2">
+                            <button class="btn btn-outline-success btn-sm me-2" onclick="setAllBulkAmountsToMax()">
+                                <i class="fas fa-fill me-1"></i>Set All to Max
+                            </button>
+                            <button class="btn btn-outline-warning btn-sm" onclick="clearAllBulkAmounts()">
+                                <i class="fas fa-eraser me-1"></i>Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            itemsContainer.insertAdjacentHTML('afterbegin', selectAllHTML);
+        }
+
+        // Hide bulk payment form
+        function hideBulkPaymentForm() {
+            document.getElementById('bulkPaymentForm').style.display = 'none';
+        }
+
+        // Set bulk amount to max for specific item
+        function setBulkAmount(workId, maxAmount) {
+            document.getElementById(`bulk_amount_${workId}`).value = maxAmount;
+            document.getElementById(`bulk_${workId}`).checked = true;
+        }
+
+        // Toggle all bulk items
+        function toggleAllBulkItems() {
+            const selectAll = document.getElementById('selectAllBulk');
+            const checkboxes = document.querySelectorAll('.bulk-item-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+        }
+
+        // Set all bulk amounts to max
+        function setAllBulkAmountsToMax() {
+            const inputs = document.querySelectorAll('.bulk-payment-input');
+            const checkboxes = document.querySelectorAll('.bulk-item-checkbox');
+            
+            inputs.forEach((input, index) => {
+                input.value = input.max;
+                checkboxes[index].checked = true;
+            });
+            
+            document.getElementById('selectAllBulk').checked = true;
+        }
+
+        // Clear all bulk amounts
+        function clearAllBulkAmounts() {
+            const inputs = document.querySelectorAll('.bulk-payment-input');
+            const checkboxes = document.querySelectorAll('.bulk-item-checkbox');
+            
+            inputs.forEach((input, index) => {
+                input.value = '0';
+                checkboxes[index].checked = false;
+            });
+            
+            document.getElementById('selectAllBulk').checked = false;
+        }
+
+        // Process bulk payment
+        async function processBulkPayment(clientId) {
+            const checkedItems = document.querySelectorAll('.bulk-item-checkbox:checked');
+            
+            if (checkedItems.length === 0) {
+                showAlert('Please select at least one item to update', 'warning');
+                return;
+            }
+            
+            const payments = [];
+            let totalAmount = 0;
+            
+            checkedItems.forEach(checkbox => {
+                const workId = checkbox.dataset.workId;
+                const workType = checkbox.dataset.workType;
+                const amountInput = document.getElementById(`bulk_amount_${workId}`);
+                const amount = parseFloat(amountInput.value) || 0;
+                
+                if (amount > 0) {
+                    payments.push({
+                        workId,
+                        workType,
+                        amount
+                    });
+                    totalAmount += amount;
+                }
+            });
+            
+            if (payments.length === 0) {
+                showAlert('No valid payments to process', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Process ${payments.length} payment updates totaling ₹${totalAmount.toLocaleString()}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/clients/${clientId}/bulk-payment`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ payments })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`${result.message}`, 'success');
+                    hideBulkPaymentForm();
+                    refreshWorkHistory(clientId);
+                } else {
+                    showAlert(result.message || 'Error processing bulk payment', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error processing bulk payment:', error);
+                showAlert('Error processing bulk payment', 'error');
+            }
+        }
+
         // Refresh work history
         async function refreshWorkHistory(clientId) {
             try {
@@ -1544,6 +1797,54 @@
                 showAlert('Error refreshing work history', 'error');
             }
         }
+    </script>
+    
+    <!-- Hamburger Menu JavaScript -->
+    <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerBtn = document.getElementById('hamburgerMenu');
+            const sidebar = document.querySelector('.sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                mobileOverlay.classList.toggle('active');
+                
+                // Toggle hamburger icon
+                if (sidebar.classList.contains('active')) {
+                    hamburgerIcon.className = 'fas fa-times';
+                } else {
+                    hamburgerIcon.className = 'fas fa-bars';
+                }
+            }
+            
+            // Toggle sidebar when hamburger button is clicked
+            hamburgerBtn.addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when overlay is clicked
+            mobileOverlay.addEventListener('click', toggleSidebar);
+            
+            // Close sidebar when a nav link is clicked (mobile)
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        toggleSidebar();
+                    }
+                });
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    sidebar.classList.remove('active');
+                    mobileOverlay.classList.remove('active');
+                    hamburgerIcon.className = 'fas fa-bars';
+                }
+            });
+        });
     </script>
 </body>
 </html>

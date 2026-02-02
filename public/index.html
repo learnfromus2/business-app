@@ -648,6 +648,25 @@
             loadStats();
         });
         
+        // Toggle alert message expansion
+        function toggleAlertMessage(button) {
+            const alertCard = button.closest('.alert-card');
+            const shortMessage = alertCard.querySelector('.alert-message-short');
+            const fullMessage = alertCard.querySelector('.alert-message-full');
+            
+            if (shortMessage.style.display === 'none') {
+                // Show short message, hide full message
+                shortMessage.style.display = 'block';
+                fullMessage.style.display = 'none';
+                button.innerHTML = '<i class="fas fa-chevron-down me-1"></i>Show Details';
+            } else {
+                // Show full message, hide short message
+                shortMessage.style.display = 'none';
+                fullMessage.style.display = 'block';
+                button.innerHTML = '<i class="fas fa-chevron-up me-1"></i>Show Less';
+            }
+        }
+        
         // Check authentication and setup role-based access
         function checkAuth() {
             const userData = localStorage.getItem('user');
@@ -663,82 +682,6 @@
             } catch (error) {
                 window.location.href = 'login.html';
             }
-        }
-        
-        // Enhanced error handling for API calls
-        async function makeApiCall(url, options = {}) {
-            try {
-                const response = await fetch(url, options);
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    
-                    // Handle specific database connection errors
-                    if (response.status === 503 && errorData.code === 'DB_UNAVAILABLE') {
-                        showDatabaseError();
-                        throw new Error('Database temporarily unavailable');
-                    }
-                    
-                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-                }
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API call failed:', error);
-                
-                // Handle network errors
-                if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                    showNetworkError();
-                }
-                
-                throw error;
-            }
-        }
-        
-        // Show database connection error
-        function showDatabaseError() {
-            const alertContainer = document.getElementById('alertContainer') || document.body;
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'alert alert-warning alert-dismissible fade show';
-            errorDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px;';
-            errorDiv.innerHTML = `
-                <i class="fas fa-database me-2"></i>
-                <strong>Database Connection Issue</strong><br>
-                The database is temporarily unavailable. Please check your internet connection and try again.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            alertContainer.appendChild(errorDiv);
-            
-            // Auto-remove after 10 seconds
-            setTimeout(() => {
-                if (errorDiv.parentNode) {
-                    errorDiv.parentNode.removeChild(errorDiv);
-                }
-            }, 10000);
-        }
-        
-        // Show network error
-        function showNetworkError() {
-            const alertContainer = document.getElementById('alertContainer') || document.body;
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-            errorDiv.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px;';
-            errorDiv.innerHTML = `
-                <i class="fas fa-wifi me-2"></i>
-                <strong>Network Error</strong><br>
-                Unable to connect to the server. Please check your internet connection.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            alertContainer.appendChild(errorDiv);
-            
-            // Auto-remove after 10 seconds
-            setTimeout(() => {
-                if (errorDiv.parentNode) {
-                    errorDiv.parentNode.removeChild(errorDiv);
-                }
-            }, 10000);
         }
         
         // Setup role-based access control
@@ -981,8 +924,15 @@
             `;
             
             try {
-                // Handle both 'id' and '_id' fields for compatibility
-                const userId = userData._id || userData.id;
+                console.log('User data:', userData);
+                console.log('Available user IDs:', {
+                    firebaseUID: userData.firebaseUID,
+                    _id: userData._id,
+                    id: userData.id
+                });
+                
+                // Use Firebase UID first, then fallback to MongoDB _id
+                const userId = userData.firebaseUID || userData._id || userData.id;
                 
                 const params = new URLSearchParams({
                     shopName: userData.shopName,
@@ -1037,21 +987,49 @@
                     const alertCard = document.createElement('div');
                     alertCard.className = `alert-card ${alert.type}`;
                     
-                    // Truncate long messages for better display
+                    // Format message for better display - preserve line breaks and structure
                     let displayMessage = alert.message;
-                    if (displayMessage.length > 200) {
-                        displayMessage = displayMessage.substring(0, 200) + '...';
+                    const isLongMessage = displayMessage.length > 300;
+                    
+                    // Convert line breaks to HTML and preserve formatting
+                    displayMessage = displayMessage
+                        .replace(/\n\n/g, '<br><br>')
+                        .replace(/\n/g, '<br>')
+                        .replace(/👤|📍|💰|👷|🚛|🎥|⚠️/g, '<br>$&'); // Add line breaks before emojis for better formatting
+                    
+                    // Create expandable content for long messages
+                    let messageHTML = '';
+                    if (isLongMessage) {
+                        const shortMessage = alert.message.substring(0, 200) + '...';
+                        const shortDisplayMessage = shortMessage
+                            .replace(/\n\n/g, '<br><br>')
+                            .replace(/\n/g, '<br>')
+                            .replace(/👤|📍|💰|👷|🚛|🎥|⚠️/g, '<br>$&');
+                        
+                        messageHTML = `
+                            <div class="alert-message-short" style="color: #64748b; font-size: 0.9rem; line-height: 1.6;">
+                                ${shortDisplayMessage}
+                            </div>
+                            <div class="alert-message-full" style="color: #64748b; font-size: 0.9rem; line-height: 1.6; display: none;">
+                                ${displayMessage}
+                            </div>
+                            <button class="btn btn-link btn-sm p-0 mt-2 expand-alert-btn" onclick="toggleAlertMessage(this)" style="font-size: 0.8rem; text-decoration: none;">
+                                <i class="fas fa-chevron-down me-1"></i>Show Details
+                            </button>
+                        `;
+                    } else {
+                        messageHTML = `<div style="color: #64748b; font-size: 0.9rem; line-height: 1.6;">${displayMessage}</div>`;
                     }
                     
                     alertCard.innerHTML = `
                         <div style="display: flex; align-items: flex-start; gap: 16px;">
                             <div style="flex-shrink: 0;">
-                                <i class="${alert.icon}" style="font-size: 1.5rem; color: ${alert.type === 'urgent' ? '#ef4444' : '#3b82f6'};"></i>
+                                <i class="${alert.icon}" style="font-size: 1.5rem; color: ${alert.type === 'urgent' ? '#ef4444' : alert.type === 'info' ? '#3b82f6' : '#10b981'};"></i>
                             </div>
                             <div style="flex: 1;">
                                 <div style="font-weight: 700; margin-bottom: 8px; font-size: 1.1rem;">${alert.title}</div>
-                                <div style="color: #64748b; font-size: 0.9rem; line-height: 1.5;">${displayMessage}</div>
-                                ${alert.count > 0 ? `<div style="margin-top: 8px;"><span style="background: ${alert.type === 'urgent' ? '#ef4444' : '#3b82f6'}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${alert.count} item${alert.count > 1 ? 's' : ''}</span></div>` : ''}
+                                ${messageHTML}
+                                ${alert.count > 0 ? `<div style="margin-top: 12px;"><span style="background: ${alert.type === 'urgent' ? '#ef4444' : alert.type === 'info' ? '#3b82f6' : '#10b981'}; color: white; padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; font-weight: 600;">${alert.count} item${alert.count > 1 ? 's' : ''}</span></div>` : ''}
                             </div>
                         </div>
                     `;
@@ -1082,8 +1060,8 @@
             try {
                 if (userRole === 'owner') {
                     // Owner sees business stats - fetch from API
-                    // Handle both 'id' and '_id' fields for compatibility
-                    const userId = userData._id || userData.id;
+                    // Use Firebase UID for API calls, fallback to MongoDB _id for compatibility
+                    const userId = userData.firebaseUID || userData._id || userData.id;
                     
                     const params = new URLSearchParams({
                         shopName: userData.shopName,
@@ -1332,8 +1310,8 @@
             `;
             
             try {
-                // Handle both 'id' and '_id' fields for compatibility
-                const userId = userData._id || userData.id;
+                // Use Firebase UID first, then fallback to MongoDB _id for compatibility
+                const userId = userData.firebaseUID || userData._id || userData.id;
                 
                 const params = new URLSearchParams({
                     shopName: userData.shopName,
@@ -1452,8 +1430,8 @@
             `;
             
             try {
-                // Handle both 'id' and '_id' fields for compatibility
-                const userId = userData._id || userData.id;
+                // Use Firebase UID first, then fallback to MongoDB _id for compatibility
+                const userId = userData.firebaseUID || userData._id || userData.id;
                 
                 const params = new URLSearchParams({
                     shopName: userData.shopName,

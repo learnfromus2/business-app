@@ -16,36 +16,45 @@ router.get('/', async (req, res) => {
     
     let filter = {};
     let orderFilter = {};
+    let userObjectId = null;
     
     // Apply shop-based filtering
     if (shopName && userRole !== 'owner') {
       // For non-owners, filter by shop and their assignments
-      if (userRole === 'transporter' || userRole === 'transporter_worker') {
-        if (!userId || userId === 'undefined') {
-          console.log('No userId provided for transporter');
-          return res.json({ data: [] }); // Return empty array instead of error
-        }
-        
-        // Check if userId is a valid ObjectId
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-          console.log('Invalid userId for transporter:', userId);
-          return res.json({ data: [] }); // Return empty array for invalid ObjectId
-        }
-        
-        filter = { 
-          shopName: shopName,
-          transporter: userId 
-        };
-        
-        orderFilter = {
-          shopName: shopName,
-          'transporters.transporter': userId
-        };
-      } else {
-        // Other roles shouldn't see transportation records
-        console.log('Role not authorized for transportation:', userRole);
-        return res.json({ data: [] });
+      if (!userId || userId === 'undefined') {
+        console.log('No userId provided for non-owner');
+        return res.json({ data: [] }); // Return empty array instead of error
       }
+      
+      // Handle both Firebase UID and MongoDB ObjectId
+      if (mongoose.Types.ObjectId.isValid(userId)) {
+        // Already a MongoDB ObjectId
+        userObjectId = userId;
+        console.log('Using MongoDB ObjectId directly:', userObjectId);
+      } else {
+        // Firebase UID - find user first
+        console.log('Looking up Firebase UID:', userId);
+        const user = await User.findOne({ firebaseUID: userId });
+        if (!user) {
+          console.log('User not found for Firebase UID:', userId);
+          return res.json({ data: [] }); // Return empty array if user not found
+        }
+        userObjectId = user._id;
+        console.log('Found user with MongoDB ObjectId:', userObjectId);
+      }
+      
+      filter = { 
+        shopName: shopName,
+        transporter: userObjectId
+      };
+      
+      orderFilter = {
+        shopName: shopName,
+        'transporters.transporter': userObjectId
+      };
+      
+      console.log('Transportation filter for non-owner:', JSON.stringify(filter, null, 2));
+      console.log('Order filter for non-owner:', JSON.stringify(orderFilter, null, 2));
     } else if (shopName && userRole === 'owner') {
       // Owners see all transportation from their shop
       filter = { shopName: shopName };
@@ -85,8 +94,8 @@ router.get('/', async (req, res) => {
         
         order.transporters.forEach(transporterAssignment => {
           // Only include if this transporter matches the user (for non-owners)
-          if (userRole !== 'owner' && userId && transporterAssignment.transporter && transporterAssignment.transporter._id.toString() !== userId) {
-            console.log(`Skipping transporter ${transporterAssignment.transporter._id} (not matching user ${userId})`);
+          if (userRole !== 'owner' && userObjectId && transporterAssignment.transporter && transporterAssignment.transporter._id.toString() !== userObjectId.toString()) {
+            console.log(`Skipping transporter ${transporterAssignment.transporter._id} (not matching user ${userObjectId})`);
             return;
           }
           

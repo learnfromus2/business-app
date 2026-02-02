@@ -49,38 +49,60 @@ router.get('/', async (req, res) => {
   try {
     const { shopName, userRole, userId } = req.query;
     
+    console.log('Editing API called with:', { shopName, userRole, userId });
+    
     let filter = {};
+    let userObjectId = null; // Declare at the top level
     
     // Apply shop-based filtering
     if (shopName && userRole !== 'owner') {
       // For non-owners, filter by shop and their assignments
-      if (userRole === 'editor' || userRole === 'worker_editor') {
-        if (!userId || userId === 'undefined') {
-          return res.json({ data: [] }); // Return empty array instead of error
-        }
-        
-        // Check if userId is a valid ObjectId
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-          return res.json({ data: [] }); // Return empty array for invalid ObjectId
-        }
-        
-        filter = { 
-          shopName: shopName,
-          editor: userId 
-        };
-      } else {
-        // Other roles shouldn't see editing projects
-        return res.json({ data: [] });
+      if (!userId || userId === 'undefined') {
+        console.log('No userId provided for non-owner');
+        return res.json({ data: [] }); // Return empty array instead of error
       }
+      
+      // Handle both Firebase UID and MongoDB ObjectId
+      if (mongoose.Types.ObjectId.isValid(userId)) {
+        // Already a MongoDB ObjectId
+        userObjectId = userId;
+        console.log('Using MongoDB ObjectId directly:', userObjectId);
+      } else {
+        // Firebase UID - find user first
+        console.log('Looking up Firebase UID:', userId);
+        const user = await User.findOne({ firebaseUID: userId });
+        if (!user) {
+          console.log('User not found for Firebase UID:', userId);
+          return res.json({ data: [] }); // Return empty array if user not found
+        }
+        userObjectId = user._id;
+        console.log('Found user with MongoDB ObjectId:', userObjectId);
+      }
+      
+      filter = { 
+        shopName: shopName,
+        editor: userObjectId
+      };
+      
+      console.log('Editing filter for non-owner:', JSON.stringify(filter, null, 2));
     } else if (shopName && userRole === 'owner') {
       // Owners see all projects from their shop
       filter = { shopName: shopName };
+      console.log('Editing filter for owner:', JSON.stringify(filter, null, 2));
     }
     
     const projects = await EditingProject.find(filter)
       .populate('client', 'name email phone')
       .populate('editor', 'firstName lastName shopName')
       .sort({ createdAt: -1 });
+    
+    console.log(`Found ${projects.length} projects for user ${userId}`);
+    
+    // Debug: Show editor assignments for each project
+    projects.forEach((project, index) => {
+      console.log(`Project ${index + 1}: ${project.projectName || project.description}`);
+      console.log('  Editor:', { id: project.editor?._id, name: project.editor ? `${project.editor.firstName} ${project.editor.lastName}` : 'Unknown' });
+    });
     
     res.json({ data: projects });
   } catch (error) {

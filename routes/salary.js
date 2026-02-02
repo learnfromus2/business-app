@@ -18,12 +18,13 @@ router.get('/', async (req, res) => {
         return res.json({ data: [] });
       }
       
-      // Check if userId is a valid ObjectId
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
+      // Find user by Firebase UID to get MongoDB ObjectId
+      const user = await User.findOne({ firebaseUID: userId });
+      if (!user) {
         return res.json({ data: [] });
       }
       
-      filter = { employee: userId };
+      filter = { employee: user._id };
     }
     
     const salaries = await Salary.find(filter)

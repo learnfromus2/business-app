@@ -89,30 +89,72 @@ router.get('/', async (req, res) => {
   try {
     const { shopName, userRole, userId } = req.query;
     
+    console.log('Orders API called with:', { shopName, userRole, userId });
+    
     let filter = {};
+    let userObjectId = null; // Declare at the top level
     
     // Apply shop-based filtering
     if (shopName && userRole !== 'owner') {
       // For non-owners, filter by shop and their assignments
       if (!userId || userId === 'undefined') {
+        console.log('No userId provided for non-owner');
         return res.json({ data: [] }); // Return empty array instead of error
       }
       
-      // Check if userId is a valid ObjectId
-      if (!mongoose.Types.ObjectId.isValid(userId)) {
-        return res.json({ data: [] }); // Return empty array for invalid ObjectId
+      // Handle both Firebase UID and MongoDB ObjectId
+      if (mongoose.Types.ObjectId.isValid(userId)) {
+        // Already a MongoDB ObjectId
+        userObjectId = userId;
+        console.log('Using MongoDB ObjectId directly:', userObjectId);
+      } else {
+        // Firebase UID - find user first
+        console.log('Looking up Firebase UID:', userId);
+        const user = await User.findOne({ firebaseUID: userId });
+        if (!user) {
+          console.log('User not found for Firebase UID:', userId);
+          return res.json({ data: [] }); // Return empty array if user not found
+        }
+        userObjectId = user._id;
+        console.log('Found user with MongoDB ObjectId:', userObjectId);
       }
       
       filter = {
         shopName: shopName,
         $or: [
-          { 'workers.worker': userId },
-          { 'transporters.transporter': userId }
+          { 'workers.worker': userObjectId },
+          { 'transporters.transporter': userObjectId }
         ]
       };
+      
+      console.log('Orders filter for non-owner:', JSON.stringify(filter, null, 2));
+      
+      // Debug: Let's also check what orders exist in the database
+      const allOrders = await Order.find({ shopName: shopName })
+        .populate('workers.worker', 'firstName lastName firebaseUID')
+        .populate('transporters.transporter', 'firstName lastName firebaseUID')
+        .select('orderName workers transporters');
+      
+      console.log('All orders in shop with worker/transporter details:');
+      allOrders.forEach((order, index) => {
+        console.log(`Order ${index + 1}: ${order.orderName}`);
+        console.log('  Workers:', order.workers?.map(w => ({
+          id: w.worker?._id?.toString(),
+          name: w.worker ? `${w.worker.firstName} ${w.worker.lastName}` : 'Unknown',
+          firebaseUID: w.worker?.firebaseUID
+        })));
+        console.log('  Transporters:', order.transporters?.map(t => ({
+          id: t.transporter?._id?.toString(),
+          name: t.transporter ? `${t.transporter.firstName} ${t.transporter.lastName}` : 'Unknown',
+          firebaseUID: t.transporter?.firebaseUID
+        })));
+      });
+      
+      console.log(`Looking for user with ObjectId: ${userObjectId}`);
     } else if (shopName && userRole === 'owner') {
       // Owners see all orders from their shop
       filter = { shopName: shopName };
+      console.log('Orders filter for owner:', JSON.stringify(filter, null, 2));
     }
     
     const orders = await Order.find(filter)
@@ -120,6 +162,44 @@ router.get('/', async (req, res) => {
       .populate('workers.worker', 'firstName lastName shopName')
       .populate('transporters.transporter', 'firstName lastName shopName')
       .sort({ createdAt: -1 });
+    
+    console.log(`Found ${orders.length} orders for user ${userId}`);
+    
+    // Debug: Try alternative query to see if we can find any matches
+    if (userRole !== 'owner' && userObjectId) {
+      console.log('Testing alternative queries...');
+      
+      // Test 1: Find orders where this user is in workers array
+      const workerOrders = await Order.find({
+        shopName: shopName,
+        'workers.worker': userObjectId
+      }).select('orderName workers');
+      console.log(`Alternative query - Found ${workerOrders.length} orders as worker`);
+      
+      // Test 2: Find orders where this user is in transporters array
+      const transporterOrders = await Order.find({
+        shopName: shopName,
+        'transporters.transporter': userObjectId
+      }).select('orderName transporters');
+      console.log(`Alternative query - Found ${transporterOrders.length} orders as transporter`);
+      
+      // Test 3: Find any orders with this user ID anywhere
+      const anyOrders = await Order.find({
+        shopName: shopName,
+        $or: [
+          { 'workers.worker': userObjectId },
+          { 'transporters.transporter': userObjectId }
+        ]
+      }).select('orderName workers transporters');
+      console.log(`Alternative query - Found ${anyOrders.length} orders with any match`);
+    }
+    
+    // Debug: Show worker assignments for each order
+    orders.forEach((order, index) => {
+      console.log(`Order ${index + 1}: ${order.orderName || order.description}`);
+      console.log('  Workers:', order.workers?.map(w => ({ id: w.worker?._id, name: w.worker ? `${w.worker.firstName} ${w.worker.lastName}` : 'Unknown' })));
+      console.log('  Transporters:', order.transporters?.map(t => ({ id: t.transporter?._id, name: t.transporter ? `${t.transporter.firstName} ${t.transporter.lastName}` : 'Unknown' })));
+    });
     
     res.json({ data: orders });
   } catch (error) {

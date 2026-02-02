@@ -14,10 +14,16 @@ router.get('/', async (req, res) => {
     
     // Apply shop-based filtering
     if (shopName && userRole !== 'owner') {
+      // Find user by Firebase UID to get MongoDB ObjectId
+      const user = await User.findOne({ firebaseUID: userId });
+      if (!user) {
+        return res.json({ data: [] });
+      }
+      
       // Non-owners can only see users from their own shop (excluding themselves)
       filter = { 
         shopName: shopName,
-        _id: { $ne: userId }
+        _id: { $ne: user._id }
       };
     } else if (shopName && userRole === 'owner') {
       // Owners see all users from their shop

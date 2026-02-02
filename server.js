@@ -11,83 +11,23 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// Global variable to track database connection status
-let isDbConnected = false;
+// Database connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/business_management', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error('MongoDB connection error:', err));
 
-// Enhanced Database connection with better error handling
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/business_management', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-    });
-    
-    isDbConnected = true;
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    
-    // Handle connection events
-    mongoose.connection.on('error', (err) => {
-      console.error('❌ MongoDB connection error:', err);
-      isDbConnected = false;
-    });
-    
-    mongoose.connection.on('disconnected', () => {
-      console.log('⚠️ MongoDB disconnected');
-      isDbConnected = false;
-    });
-    
-    mongoose.connection.on('reconnected', () => {
-      console.log('✅ MongoDB reconnected');
-      isDbConnected = true;
-    });
-    
-  } catch (error) {
-    console.error('❌ MongoDB connection error:', error.message);
-    isDbConnected = false;
-    
-    // Don't exit the process, continue with limited functionality
-    console.log('⚠️ Server will continue with limited functionality (no database)');
-    
-    // Retry connection after 30 seconds
-    setTimeout(connectDB, 30000);
-  }
-};
-
-// Connect to database
-connectDB();
-
-// Middleware to check database connection
-const checkDbConnection = (req, res, next) => {
-  if (!isDbConnected) {
-    return res.status(503).json({
-      error: 'Database temporarily unavailable',
-      message: 'Please check your internet connection and try again',
-      code: 'DB_UNAVAILABLE'
-    });
-  }
-  next();
-};
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    database: isDbConnected ? 'connected' : 'disconnected',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Routes with database connection check
-app.use('/api/auth', checkDbConnection, require('./routes/auth'));
-app.use('/api/orders', checkDbConnection, require('./routes/orders'));
-app.use('/api/editing', checkDbConnection, require('./routes/editing'));
-app.use('/api/users', checkDbConnection, require('./routes/users'));
-app.use('/api/clients', checkDbConnection, require('./routes/clients'));
-app.use('/api/salary', checkDbConnection, require('./routes/salary'));
-app.use('/api/transportation', checkDbConnection, require('./routes/transportation'));
-app.use('/api/dashboard', checkDbConnection, require('./routes/dashboard'));
+// Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/orders', require('./routes/orders'));
+app.use('/api/editing', require('./routes/editing'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/clients', require('./routes/clients'));
+app.use('/api/salary', require('./routes/salary'));
+app.use('/api/transportation', require('./routes/transportation'));
+app.use('/api/dashboard', require('./routes/dashboard'));
 
 // Test endpoint to check database data
 app.get('/api/test/data', async (req, res) => {
@@ -102,8 +42,8 @@ app.get('/api/test/data', async (req, res) => {
     const projectCount = await EditingProject.countDocuments();
     const clientCount = await Client.countDocuments();
     
-    const sampleUsers = await User.find().limit(3).select('firstName lastName email shopName role');
-    const sampleOrders = await Order.find().limit(3).select('description totalAmount shopName');
+    const sampleUsers = await User.find().limit(3).select('firstName lastName email shopName role firebaseUID');
+    const sampleOrders = await Order.find().limit(3).select('description totalAmount shopName workers transporters');
     
     res.json({
       counts: {
@@ -123,225 +63,164 @@ app.get('/api/test/data', async (req, res) => {
   }
 });
 
-// Dashboard routes
-app.get('/api/dashboard/alerts', async (req, res) => {
+// Debug endpoint to check user assignments
+app.get('/api/debug/assignments/:userId', async (req, res) => {
   try {
-    const { shopName, userRole, userId } = req.query;
+    const { userId } = req.params;
+    const { shopName } = req.query;
     
-    const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-    
-    // Get orders ending today
+    const User = require('./models/User');
     const Order = require('./models/Order');
     const EditingProject = require('./models/EditingProject');
-    const mongoose = require('mongoose');
     
-    let orderFilter = {
-      completionDate: { $gte: todayStart, $lt: todayEnd }
-    };
+    console.log('=== DEBUGGING USER ASSIGNMENTS ===');
+    console.log('Input userId:', userId);
+    console.log('Input shopName:', shopName);
     
-    let projectFilter = {
-      endDate: { $gte: todayStart, $lt: todayEnd }
-    };
+    // Step 1: Find the user
+    let user = null;
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+      user = await User.findById(userId);
+      console.log('Found user by MongoDB ID:', user ? `${user.firstName} ${user.lastName}` : 'Not found');
+    } else {
+      user = await User.findOne({ firebaseUID: userId });
+      console.log('Found user by Firebase UID:', user ? `${user.firstName} ${user.lastName}` : 'Not found');
+    }
     
-    // Apply shop-based filtering
-    if (shopName && userRole !== 'owner') {
-      // For non-owners, filter by shop and their assignments
-      if (userId && userId !== 'undefined' && mongoose.Types.ObjectId.isValid(userId)) {
-        orderFilter = {
-          ...orderFilter,
-          shopName: shopName,
-          $or: [
-            { 'workers.worker': userId },
-            { 'transporters.transporter': userId }
-          ]
-        };
-        
-        if (userRole === 'editor' || userRole === 'worker_editor') {
-          projectFilter = {
-            ...projectFilter,
-            shopName: shopName,
-            editor: userId
-          };
-        } else {
-          // Non-editors don't see projects
-          projectFilter = { _id: null };
+    if (!user) {
+      return res.json({ error: 'User not found', userId });
+    }
+    
+    const userObjectId = user._id;
+    console.log('User ObjectId:', userObjectId);
+    
+    // Step 2: Find all orders in the shop
+    const allOrders = await Order.find({ shopName })
+      .populate('workers.worker', 'firstName lastName firebaseUID')
+      .populate('transporters.transporter', 'firstName lastName firebaseUID');
+    
+    console.log(`Found ${allOrders.length} total orders in shop`);
+    
+    // Step 3: Check which orders have this user assigned
+    const userOrders = [];
+    allOrders.forEach(order => {
+      let isAssigned = false;
+      let role = [];
+      
+      // Check workers
+      order.workers?.forEach(w => {
+        if (w.worker && w.worker._id.toString() === userObjectId.toString()) {
+          isAssigned = true;
+          role.push('worker');
         }
-      } else {
-        // Invalid userId, return no alerts
-        orderFilter = { _id: null };
-        projectFilter = { _id: null };
+      });
+      
+      // Check transporters
+      order.transporters?.forEach(t => {
+        if (t.transporter && t.transporter._id.toString() === userObjectId.toString()) {
+          isAssigned = true;
+          role.push('transporter');
+        }
+      });
+      
+      if (isAssigned) {
+        userOrders.push({
+          orderId: order._id,
+          orderName: order.orderName,
+          roles: role,
+          workers: order.workers?.map(w => ({
+            id: w.worker?._id,
+            name: w.worker ? `${w.worker.firstName} ${w.worker.lastName}` : 'Unknown'
+          })),
+          transporters: order.transporters?.map(t => ({
+            id: t.transporter?._id,
+            name: t.transporter ? `${t.transporter.firstName} ${t.transporter.lastName}` : 'Unknown'
+          }))
+        });
       }
-    } else if (shopName && userRole === 'owner') {
-      // For owners, get all from their shop
-      orderFilter = { ...orderFilter, shopName: shopName };
-      projectFilter = { ...projectFilter, shopName: shopName };
-    }
+    });
     
-    const ordersEndingToday = await Order.countDocuments(orderFilter);
-    const projectsEndingToday = await EditingProject.countDocuments(projectFilter);
+    // Step 4: Test the actual query
+    const queryResult = await Order.find({
+      shopName: shopName,
+      $or: [
+        { 'workers.worker': userObjectId },
+        { 'transporters.transporter': userObjectId }
+      ]
+    });
     
-    const alerts = [];
+    console.log(`Query found ${queryResult.length} orders`);
     
-    if (ordersEndingToday > 0) {
-      alerts.push({
-        type: 'urgent',
-        title: 'Orders Ending Today',
-        message: `${ordersEndingToday} orders are scheduled to complete today`,
-        icon: 'fas fa-exclamation-triangle'
-      });
-    }
+    // Step 5: Check projects
+    const allProjects = await EditingProject.find({ shopName })
+      .populate('editor', 'firstName lastName firebaseUID');
     
-    if (projectsEndingToday > 0) {
-      alerts.push({
-        type: 'info',
-        title: 'Editing Projects',
-        message: `${projectsEndingToday} editing projects ending today`,
-        icon: 'fas fa-video'
-      });
-    }
+    const userProjects = allProjects.filter(project => 
+      project.editor && project.editor._id.toString() === userObjectId.toString()
+    );
     
-    if (alerts.length === 0) {
-      alerts.push({
-        type: 'info',
-        title: 'All Clear',
-        message: 'No urgent tasks for today',
-        icon: 'fas fa-check-circle'
-      });
-    }
+    res.json({
+      user: {
+        _id: user._id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        role: user.role,
+        firebaseUID: user.firebaseUID
+      },
+      assignments: {
+        totalOrdersInShop: allOrders.length,
+        assignedOrders: userOrders.length,
+        assignedOrderDetails: userOrders,
+        queryFoundOrders: queryResult.length,
+        totalProjectsInShop: allProjects.length,
+        assignedProjects: userProjects.length,
+        assignedProjectDetails: userProjects.map(p => ({
+          projectId: p._id,
+          projectName: p.projectName,
+          editor: p.editor ? `${p.editor.firstName} ${p.editor.lastName}` : 'Unknown'
+        }))
+      }
+    });
     
-    res.json({ data: alerts });
   } catch (error) {
-    console.error('Error fetching alerts:', error);
-    res.json({ data: [{ type: 'info', title: 'All Clear', message: 'No urgent tasks for today', icon: 'fas fa-check-circle' }] });
+    console.error('Debug assignments error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
-
-app.get('/api/dashboard/stats', async (req, res) => {
+app.get('/api/test/user/:userId', async (req, res) => {
   try {
-    const { shopName, userRole, userId } = req.query;
-    
-    const Order = require('./models/Order');
-    const EditingProject = require('./models/EditingProject');
+    const { userId } = req.params;
     const User = require('./models/User');
-    const mongoose = require('mongoose');
     
-    let orderFilter = {};
-    let projectFilter = {};
-    let userFilter = {};
+    console.log('Testing user lookup for:', userId);
     
-    // Apply shop-based filtering
-    if (shopName && userRole !== 'owner') {
-      // For non-owners, filter by shop and their assignments
-      if (userId && userId !== 'undefined' && mongoose.Types.ObjectId.isValid(userId)) {
-        orderFilter = {
-          shopName: shopName,
-          $or: [
-            { 'workers.worker': userId },
-            { 'transporters.transporter': userId }
-          ]
-        };
-        
-        if (userRole === 'editor' || userRole === 'worker_editor') {
-          projectFilter = { 
-            shopName: shopName,
-            editor: userId 
-          };
-        } else {
-          projectFilter = { _id: null }; // Non-editors don't see projects
-        }
-        
-        userFilter = { _id: userId };
-      } else {
-        // Invalid userId, return zero stats
-        orderFilter = { _id: null };
-        projectFilter = { _id: null };
-        userFilter = { _id: null };
-      }
-    } else if (shopName && userRole === 'owner') {
-      // For owners, get all data from their shop
-      orderFilter = { shopName: shopName };
-      projectFilter = { shopName: shopName };
-      userFilter = { shopName: shopName };
-    }
-    
-    // Get order statistics
-    const totalOrders = await Order.countDocuments(orderFilter);
-    const completedOrders = await Order.countDocuments({ ...orderFilter, status: 'completed' });
-    const remainingOrders = totalOrders - completedOrders;
-    
-    // Get payment statistics
-    const orderPayments = await Order.aggregate([
-      { $match: orderFilter },
-      {
-        $group: {
-          _id: null,
-          totalPayment: { $sum: '$totalAmount' },
-          receivedPayment: { $sum: '$receivedPayment' }
-        }
-      }
-    ]);
-    
-    // Get project statistics
-    const totalProjects = await EditingProject.countDocuments(projectFilter);
-    const completedProjects = await EditingProject.countDocuments({ ...projectFilter, status: 'completed' });
-    const activeProjects = totalProjects - completedProjects;
-    
-    const projectPayments = await EditingProject.aggregate([
-      { $match: projectFilter },
-      {
-        $group: {
-          _id: null,
-          totalProjectValue: { $sum: '$totalAmount' },
-          totalCommissions: { $sum: '$commissionAmount' }
-        }
-      }
-    ]);
-    
-    // Get worker payment statistics
-    const workerPayments = await User.aggregate([
-      { $match: userFilter },
-      {
-        $group: {
-          _id: null,
-          totalWorkerPayments: { $sum: '$remainingSalary' }
-        }
-      }
-    ]);
-    
-    const orderStats = orderPayments[0] || { totalPayment: 0, receivedPayment: 0 };
-    const projectStats = projectPayments[0] || { totalProjectValue: 0, totalCommissions: 0 };
-    const workerStats = workerPayments[0] || { totalWorkerPayments: 0 };
+    // Try both Firebase UID and MongoDB ObjectId lookup
+    const firebaseUser = await User.findOne({ firebaseUID: userId });
+    const mongoUser = mongoose.Types.ObjectId.isValid(userId) ? await User.findById(userId) : null;
     
     res.json({
-      data: {
-        remainingOrders,
-        doneOrders: completedOrders,
-        totalPayment: orderStats.totalPayment,
-        receivedPayment: orderStats.receivedPayment,
-        activeProjects,
-        completedProjects,
-        totalProjectValue: projectStats.totalProjectValue,
-        totalCommissions: projectStats.totalCommissions,
-        workerPayments: workerStats.totalWorkerPayments
-      }
+      userId,
+      isValidObjectId: mongoose.Types.ObjectId.isValid(userId),
+      firebaseUser: firebaseUser ? {
+        _id: firebaseUser._id,
+        name: `${firebaseUser.firstName} ${firebaseUser.lastName}`,
+        email: firebaseUser.email,
+        role: firebaseUser.role,
+        shopName: firebaseUser.shopName,
+        firebaseUID: firebaseUser.firebaseUID
+      } : null,
+      mongoUser: mongoUser ? {
+        _id: mongoUser._id,
+        name: `${mongoUser.firstName} ${mongoUser.lastName}`,
+        email: mongoUser.email,
+        role: mongoUser.role,
+        shopName: mongoUser.shopName,
+        firebaseUID: mongoUser.firebaseUID
+      } : null
     });
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    res.json({
-      data: {
-        remainingOrders: 0,
-        doneOrders: 0,
-        totalPayment: 0,
-        receivedPayment: 0,
-        activeProjects: 0,
-        completedProjects: 0,
-        totalProjectValue: 0,
-        totalCommissions: 0,
-        workerPayments: 0
-      }
-    });
+    console.error('User lookup test error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

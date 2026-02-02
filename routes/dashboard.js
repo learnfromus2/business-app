@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const EditingProject = require('../models/EditingProject');
 const Client = require('../models/Client');
@@ -11,310 +12,363 @@ router.get('/alerts', async (req, res) => {
   try {
     const { shopName, userRole, userId } = req.query;
     
+    console.log('Dashboard alerts called with:', { shopName, userRole, userId });
+    
     let alerts = [];
-    const today = new Date();
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
     
     if (userRole === 'owner') {
       // Owner sees all business alerts
-      let filter = {};
-      if (shopName) {
-        filter.shopName = shopName;
-      }
-      
-      // Find orders ending today
-      const ordersEndingToday = await Order.find({
-        ...filter,
-        $or: [
-          { completionDate: { $gte: todayStart, $lte: todayEnd } },
-          { orderDate: { $gte: todayStart, $lte: todayEnd } }
-        ],
-        status: { $ne: 'completed' }
-      }).populate('client', 'name');
-      
-      // Find projects ending today
-      const projectsEndingToday = await EditingProject.find({
-        ...filter,
-        endDate: { $gte: todayStart, $lte: todayEnd },
-        status: { $ne: 'completed' }
-      }).populate('client', 'name').populate('editor', 'firstName lastName');
-      
-      // Create alerts for orders
-      if (ordersEndingToday.length > 0) {
-        const orderNames = ordersEndingToday.map(order => 
-          `"${order.orderName || 'Order #' + order._id.toString().slice(-6)}" (${order.client?.name || 'Unknown Client'})`
-        ).join(', ');
+      try {
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
         
-        alerts.push({
-          type: 'urgent',
-          title: `${ordersEndingToday.length} Order${ordersEndingToday.length > 1 ? 's' : ''} Ending Today`,
-          message: `Orders: ${orderNames}`,
-          icon: 'fas fa-exclamation-triangle',
-          count: ordersEndingToday.length
-        });
-      }
-      
-      // Create alerts for projects
-      if (projectsEndingToday.length > 0) {
-        const projectNames = projectsEndingToday.map(project => 
-          `"${project.projectName}" (Editor: ${project.editor?.firstName} ${project.editor?.lastName})`
-        ).join(', ');
+        // Get orders due today (using orderDate as deadline)
+        const ordersEndingToday = await Order.find({
+          shopName: shopName,
+          orderDate: { 
+            $gte: new Date(today.getFullYear(), today.getMonth(), today.getDate()), // Start of today
+            $lte: today // End of today
+          },
+          status: { $ne: 'completed' }
+        }).populate('client', 'name phone')
+          .populate('workers.worker', 'firstName lastName')
+          .populate('transporters.transporter', 'firstName lastName')
+          .select('orderName description clientName orderDate totalAmount receivedPayment status venuePlace workers transporters');
         
-        alerts.push({
-          type: 'info',
-          title: `${projectsEndingToday.length} Project${projectsEndingToday.length > 1 ? 's' : ''} Ending Today`,
-          message: `Projects: ${projectNames}`,
-          icon: 'fas fa-video',
-          count: projectsEndingToday.length
-        });
-      }
-      
-      // Check for pending salary payments
-      const pendingSalaries = await Salary.find({
-        isPaid: false
-      }).populate('employee', 'firstName lastName shopName');
-      
-      const shopPendingSalaries = pendingSalaries.filter(salary => 
-        !shopName || salary.employee?.shopName === shopName
-      );
-      
-      if (shopPendingSalaries.length > 0) {
-        const totalPending = shopPendingSalaries.reduce((sum, salary) => sum + salary.amount, 0);
-        alerts.push({
-          type: 'urgent',
-          title: 'Pending Salary Payments',
-          message: `₹${totalPending.toLocaleString()} pending for ${shopPendingSalaries.length} employee${shopPendingSalaries.length > 1 ? 's' : ''}`,
-          icon: 'fas fa-money-bill-wave',
-          count: shopPendingSalaries.length
-        });
-      }
-      
-      // If no alerts, show a positive message
-      if (alerts.length === 0) {
-        alerts.push({
-          type: 'info',
-          title: 'All Clear!',
-          message: 'No urgent tasks or deadlines for today',
-          icon: 'fas fa-check-circle',
-          count: 0
-        });
-      }
-      
-    } else {
-      // Workers/Editors/Transporters see only their assigned work alerts
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-      
-      const userRole = user.role.toLowerCase();
-      
-      // Find orders where user is specifically assigned as worker or transporter
-      const userOrders = await Order.find({
-        $and: [
-          {
-            $or: [
-              { 'workers.worker': userId },
-              { 'transporters.transporter': userId }
-            ]
+        // Get projects ending today (using endDate as deadline)
+        const projectsEndingToday = await EditingProject.find({
+          shopName: shopName,
+          endDate: { 
+            $gte: new Date(today.getFullYear(), today.getMonth(), today.getDate()), // Start of today
+            $lte: today // End of today
           },
-          {
-            $or: [
-              { completionDate: { $gte: todayStart, $lte: todayEnd } },
-              { orderDate: { $gte: todayStart, $lte: todayEnd } }
-            ]
-          },
-          { status: { $ne: 'completed' } }
-        ]
-      }).populate('client', 'name');
-      
-      // Find projects where user is specifically assigned as editor
-      const userProjects = await EditingProject.find({
-        editor: userId,
-        endDate: { $gte: todayStart, $lte: todayEnd },
-        status: { $ne: 'completed' }
-      }).populate('client', 'name');
-      
-      // Create alerts only for assigned work
-      if (userOrders.length > 0) {
-        const orderNames = userOrders.map(order => {
-          // Check if user is worker or transporter for this order
-          const isWorker = order.workers.some(w => w.worker && w.worker.toString() === userId);
-          const isTransporter = order.transporters.some(t => t.transporter && t.transporter.toString() === userId);
-          const role = isWorker ? 'Worker' : 'Transporter';
+          status: { $ne: 'completed' }
+        }).populate('client', 'name phone')
+          .populate('editor', 'firstName lastName')
+          .select('projectName description clientName endDate totalAmount commissionAmount status editor');
+        
+        if (ordersEndingToday.length > 0) {
+          const orderDetails = ordersEndingToday.map(order => {
+            const clientName = order.client?.name || order.clientName || 'Unknown Client';
+            const remainingAmount = (order.totalAmount || 0) - (order.receivedPayment || 0);
+            
+            // Get assigned team members
+            const workers = order.workers?.map(w => w.worker ? `${w.worker.firstName} ${w.worker.lastName}` : 'Unknown Worker').join(', ') || 'No workers assigned';
+            const transporters = order.transporters?.map(t => t.transporter ? `${t.transporter.firstName} ${t.transporter.lastName}` : 'Unknown Transporter').join(', ') || 'No transporters assigned';
+            
+            return `📦 ${order.orderName || order.description}
+            👤 Client: ${clientName} | 📍 Venue: ${order.venuePlace || 'N/A'}
+            💰 Remaining: ₹${remainingAmount.toLocaleString()}
+            👷 Workers: ${workers}
+            🚛 Transporters: ${transporters}
+            📅 Due Today: ${new Date(order.orderDate).toLocaleDateString()}`;
+          }).join('\n\n');
           
-          return `"${order.orderName || 'Order #' + order._id.toString().slice(-6)}" (${order.client?.name || 'Unknown Client'}) - Your role: ${role}`;
-        }).join(', ');
-        
-        alerts.push({
-          type: 'urgent',
-          title: `Your ${userOrders.length} Assigned Order${userOrders.length > 1 ? 's' : ''} Due Today`,
-          message: `Orders: ${orderNames}`,
-          icon: 'fas fa-box',
-          count: userOrders.length
-        });
-      }
-      
-      if (userProjects.length > 0) {
-        const projectNames = userProjects.map(project => 
-          `"${project.projectName}" (${project.client?.name || 'Unknown Client'}) - Your role: Editor`
-        ).join(', ');
-        
-        alerts.push({
-          type: 'info',
-          title: `Your ${userProjects.length} Assigned Project${userProjects.length > 1 ? 's' : ''} Due Today`,
-          message: `Projects: ${projectNames}`,
-          icon: 'fas fa-video',
-          count: userProjects.length
-        });
-      }
-      
-      // Check user's pending salary (only their own)
-      const userSalaries = await Salary.find({
-        employee: userId,
-        isPaid: false
-      });
-      
-      if (userSalaries.length > 0) {
-        const totalPending = userSalaries.reduce((sum, salary) => sum + salary.amount, 0);
-        alerts.push({
-          type: 'info',
-          title: 'Your Payment Ready',
-          message: `Your salary of ₹${totalPending.toLocaleString()} is ready for collection`,
-          icon: 'fas fa-money-bill-wave',
-          count: userSalaries.length
-        });
-      }
-      
-      // If no assigned work alerts, show appropriate message
-      if (alerts.length === 0) {
-        // Check if user has any assigned work at all
-        const allUserOrders = await Order.find({
-          $or: [
-            { 'workers.worker': userId },
-            { 'transporters.transporter': userId }
-          ]
-        });
-        
-        const allUserProjects = await EditingProject.find({ editor: userId });
-        
-        if (allUserOrders.length === 0 && allUserProjects.length === 0) {
           alerts.push({
-            type: 'info',
-            title: 'No Assignments',
-            message: 'You are not currently assigned to any orders or projects. Contact your manager for work assignments.',
-            icon: 'fas fa-info-circle',
-            count: 0
-          });
-        } else {
-          alerts.push({
-            type: 'info',
-            title: 'Great Job!',
-            message: 'No urgent assigned tasks for today. Keep up the good work!',
-            icon: 'fas fa-thumbs-up',
-            count: 0
+            type: 'urgent',
+            title: `🚨 ${ordersEndingToday.length} Order${ordersEndingToday.length > 1 ? 's' : ''} Due Today`,
+            message: orderDetails,
+            icon: 'fas fa-exclamation-triangle',
+            count: ordersEndingToday.length
           });
         }
+        
+        if (projectsEndingToday.length > 0) {
+          const projectDetails = projectsEndingToday.map(project => {
+            const clientName = project.client?.name || project.clientName || 'Unknown Client';
+            const editorName = project.editor ? `${project.editor.firstName} ${project.editor.lastName}` : 'No editor assigned';
+            
+            return `🎬 ${project.projectName || project.description}
+            👤 Client: ${clientName}
+            💰 Value: ₹${(project.totalAmount || 0).toLocaleString()} | Commission: ₹${(project.commissionAmount || 0).toLocaleString()}
+            🎥 Editor: ${editorName}
+            📅 Deadline Today: ${new Date(project.endDate).toLocaleDateString()}`;
+          }).join('\n\n');
+          
+          alerts.push({
+            type: 'urgent',
+            title: `🚨 ${projectsEndingToday.length} Project${projectsEndingToday.length > 1 ? 's' : ''} Ending Today`,
+            message: projectDetails,
+            icon: 'fas fa-video',
+            count: projectsEndingToday.length
+          });
+        }
+        
+        // Add team coordination alert for owners to see all team members involved
+        const allWorkEndingToday = [...ordersEndingToday, ...projectsEndingToday];
+        if (allWorkEndingToday.length > 0) {
+          const allTeamMembers = new Set();
+          
+          // Collect all team members involved in today's deadlines
+          ordersEndingToday.forEach(order => {
+            order.workers?.forEach(w => {
+              if (w.worker) allTeamMembers.add(`👷 ${w.worker.firstName} ${w.worker.lastName} (Worker)`);
+            });
+            order.transporters?.forEach(t => {
+              if (t.transporter) allTeamMembers.add(`🚛 ${t.transporter.firstName} ${t.transporter.lastName} (Transporter)`);
+            });
+          });
+          
+          projectsEndingToday.forEach(project => {
+            if (project.editor) {
+              allTeamMembers.add(`🎥 ${project.editor.firstName} ${project.editor.lastName} (Editor)`);
+            }
+          });
+          
+          if (allTeamMembers.size > 0) {
+            const teamSummary = `Team members with deadlines today:\n\n${Array.from(allTeamMembers).join('\n')}\n\nMake sure to coordinate with your team to complete all work on time!`;
+            
+            alerts.push({
+              type: 'info',
+              title: `👥 Team Coordination (${allTeamMembers.size} members with deadlines)`,
+              message: teamSummary,
+              icon: 'fas fa-users',
+              count: allTeamMembers.size
+            });
+          }
+        }
+        
+      } catch (error) {
+        console.error('Error fetching owner alerts:', error);
       }
+    } else {
+      // Workers/Editors/Transporters see only their assigned work
+      try {
+        let actualUserId = null;
+        
+        // Handle both Firebase UID and MongoDB ObjectId
+        if (userId) {
+          if (mongoose.Types.ObjectId.isValid(userId)) {
+            // Already a MongoDB ObjectId
+            actualUserId = userId;
+          } else {
+            // Firebase UID - find the corresponding MongoDB user
+            const user = await User.findOne({ firebaseUID: userId });
+            if (user) {
+              actualUserId = user._id.toString();
+            }
+          }
+        }
+        
+        if (actualUserId) {
+          const today = new Date();
+          today.setHours(23, 59, 59, 999);
+          
+          console.log('Looking for alerts for user:', { originalUserId: userId, actualUserId, userRole });
+          
+          // Get user's orders due today (using orderDate as deadline)
+          const userOrders = await Order.find({
+            $or: [
+              { 'workers.worker': actualUserId },
+              { 'transporters.transporter': actualUserId }
+            ],
+            orderDate: { 
+              $gte: new Date(today.getFullYear(), today.getMonth(), today.getDate()), // Start of today
+              $lte: today // End of today
+            },
+            status: { $ne: 'completed' }
+          }).populate('client', 'name phone')
+            .populate('workers.worker', 'firstName lastName')
+            .populate('transporters.transporter', 'firstName lastName')
+            .select('orderName description clientName orderDate totalAmount venuePlace status workers transporters');
+          
+          console.log(`Found ${userOrders.length} orders due today for user ${actualUserId}`);
+          
+          // Get user's projects ending today (using endDate as deadline)
+          const userProjects = await EditingProject.find({
+            editor: actualUserId,
+            endDate: { 
+              $gte: new Date(today.getFullYear(), today.getMonth(), today.getDate()), // Start of today
+              $lte: today // End of today
+            },
+            status: { $ne: 'completed' }
+          }).populate('client', 'name phone')
+            .populate('editor', 'firstName lastName')
+            .select('projectName description clientName endDate totalAmount commissionAmount status editor');
+          
+          console.log(`Found ${userProjects.length} projects ending today for user ${actualUserId}`);
+          
+          if (userOrders.length > 0) {
+            const orderDetails = userOrders.map(order => {
+              const clientName = order.client?.name || order.clientName || 'Unknown Client';
+              
+              // Show all team members so user knows who else is working on this
+              const allWorkers = order.workers?.map(w => w.worker ? `${w.worker.firstName} ${w.worker.lastName}` : 'Unknown Worker').join(', ') || 'No workers';
+              const allTransporters = order.transporters?.map(t => t.transporter ? `${t.transporter.firstName} ${t.transporter.lastName}` : 'Unknown Transporter').join(', ') || 'No transporters';
+              
+              return `📦 ${order.orderName || order.description}
+              � Client: ${clientName} | 📍 Venue: ${order.venuePlace || 'N/A'}
+              👷 Team Workers: ${allWorkers}
+              🚛 Team Transporters: ${allTransporters}
+              📅 Due Today: ${new Date(order.orderDate).toLocaleDateString()}
+              ⚠️ Your work is due today!`;
+            }).join('\n\n');
+            
+            alerts.push({
+              type: 'urgent',
+              title: `🚨 Your ${userOrders.length} Order${userOrders.length > 1 ? 's' : ''} Ending Today`,
+              message: orderDetails,
+              icon: 'fas fa-box',
+              count: userOrders.length
+            });
+          }
+          
+          if (userProjects.length > 0) {
+            const projectDetails = userProjects.map(project => {
+              const clientName = project.client?.name || project.clientName || 'Unknown Client';
+              
+              return `🎬 ${project.projectName || project.description}
+              👤 Client: ${clientName}
+              💰 Commission: ₹${(project.commissionAmount || 0).toLocaleString()}
+              🎥 You are the assigned editor
+              📅 Deadline Today: ${new Date(project.endDate).toLocaleDateString()}
+              ⚠️ Project deadline is today!`;
+            }).join('\n\n');
+            
+            alerts.push({
+              type: 'urgent',
+              title: `🚨 Your ${userProjects.length} Project${userProjects.length > 1 ? 's' : ''} Ending Today`,
+              message: projectDetails,
+              icon: 'fas fa-video',
+              count: userProjects.length
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user alerts:', error);
+      }
+    }
+    
+    // If no alerts, show a positive message
+    if (alerts.length === 0) {
+      alerts.push({
+        type: 'info',
+        title: 'All Good!',
+        message: 'No urgent deadlines today. Keep up the great work!',
+        icon: 'fas fa-check-circle',
+        count: 0
+      });
     }
     
     res.json({ data: alerts });
   } catch (error) {
-    console.error('Error fetching dashboard alerts:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Dashboard alerts error:', error);
+    res.status(500).json({ 
+      data: [{
+        type: 'urgent',
+        title: 'System Error',
+        message: 'Unable to load alerts. Please refresh the page.',
+        icon: 'fas fa-exclamation-triangle',
+        count: 0
+      }]
+    });
   }
 });
 
-// Get dashboard stats
+// Get dashboard stats - SIMPLE VERSION
 router.get('/stats', async (req, res) => {
   try {
     const { shopName, userRole, userId } = req.query;
     
-    let stats = {};
+    console.log('Dashboard stats called with:', { shopName, userRole, userId });
+    
+    let stats = {
+      remainingOrders: 0,
+      doneOrders: 0,
+      totalPayment: 0,
+      receivedPayment: 0,
+      activeOrders: 0,
+      completedOrders: 0,
+      activeProjects: 0,
+      completedProjects: 0,
+      totalEarnings: 0,
+      paidSalary: 0,
+      remainingSalary: 0,
+      remainingClientPayments: 0,
+      workerPayments: 0,
+      userRole: userRole || 'unknown'
+    };
     
     if (userRole === 'owner') {
       // Owner sees business stats
-      let filter = {};
-      if (shopName) {
-        filter.shopName = shopName;
+      try {
+        const orders = await Order.find(shopName ? { shopName } : {});
+        const projects = await EditingProject.find(shopName ? { shopName } : {});
+        const clients = await Client.find(shopName ? { shopName } : {});
+        const salaries = await Salary.find(shopName ? { shopName } : {});
+        
+        stats.remainingOrders = orders.filter(o => o.status !== 'completed').length;
+        stats.doneOrders = orders.filter(o => o.status === 'completed').length;
+        stats.totalPayment = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+        stats.receivedPayment = orders.reduce((sum, o) => sum + (o.receivedPayment || 0), 0);
+        
+        stats.activeProjects = projects.filter(p => p.status !== 'completed').length;
+        stats.completedProjects = projects.filter(p => p.status === 'completed').length;
+        
+        // Calculate remaining client payments
+        stats.remainingClientPayments = clients.reduce((sum, c) => {
+          const totalWork = (c.totalOrderAmount || 0) + (c.totalProjectAmount || 0);
+          const received = c.moneyReceived || 0;
+          return sum + Math.max(0, totalWork - received);
+        }, 0);
+        
+        // Calculate pending worker payments
+        stats.workerPayments = salaries.filter(s => !s.isPaid).reduce((sum, s) => sum + s.amount, 0);
+        
+      } catch (error) {
+        console.error('Error fetching owner stats:', error);
       }
-      
-      // Get orders stats
-      const orders = await Order.find(filter);
-      const remainingOrders = orders.filter(order => order.status !== 'completed').length;
-      const doneOrders = orders.filter(order => order.status === 'completed').length;
-      const totalPayment = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-      const receivedPayment = orders.reduce((sum, order) => sum + (order.receivedPayment || 0), 0);
-      
-      // Get worker payments
-      const salaries = await Salary.find({ isPaid: false }).populate('employee', 'shopName');
-      const shopSalaries = salaries.filter(salary => 
-        !shopName || salary.employee?.shopName === shopName
-      );
-      const workerPayments = shopSalaries.reduce((sum, salary) => sum + salary.amount, 0);
-      
-      // Get client payment information
-      const clients = await Client.find(shopName ? { shopName } : {});
-      const totalClientPaymentsDue = clients.reduce((sum, client) => sum + (client.totalPaymentsDue || 0), 0);
-      const totalClientPaymentsReceived = clients.reduce((sum, client) => sum + (client.receivedPayments || 0), 0);
-      const remainingClientPayments = totalClientPaymentsDue - totalClientPaymentsReceived;
-      
-      stats = {
-        remainingOrders,
-        doneOrders,
-        totalPayment,
-        receivedPayment,
-        workerPayments,
-        remainingClientPayments,
-        totalClientPaymentsDue,
-        totalClientPaymentsReceived
-      };
     } else {
-      // Workers/Editors/Transporters see only their assigned work stats
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+      // Worker/Editor/Transporter sees personal stats
+      try {
+        // Handle both Firebase UID and MongoDB ObjectId
+        let userQuery = {};
+        if (userId) {
+          if (mongoose.Types.ObjectId.isValid(userId)) {
+            // MongoDB ObjectId
+            userQuery = { _id: userId };
+          } else {
+            // Firebase UID - find user first
+            const user = await User.findOne({ firebaseUID: userId });
+            if (user) {
+              userQuery = { _id: user._id };
+              userId = user._id.toString(); // Use MongoDB ID for queries
+            }
+          }
+          
+          if (userQuery._id) {
+            // Get user's orders
+            const userOrders = await Order.find({
+              $or: [
+                { 'workers.worker': userQuery._id },
+                { 'transporters.transporter': userQuery._id }
+              ]
+            });
+            
+            // Get user's projects
+            const userProjects = await EditingProject.find({ editor: userQuery._id });
+            
+            // Get user's salary
+            const userSalaries = await Salary.find({ employee: userQuery._id });
+            
+            stats.activeOrders = userOrders.filter(o => o.status !== 'completed').length;
+            stats.completedOrders = userOrders.filter(o => o.status === 'completed').length;
+            stats.activeProjects = userProjects.filter(p => p.status !== 'completed').length;
+            stats.completedProjects = userProjects.filter(p => p.status === 'completed').length;
+            stats.totalEarnings = userSalaries.reduce((sum, s) => sum + s.amount, 0);
+            stats.paidSalary = userSalaries.filter(s => s.isPaid).reduce((sum, s) => sum + s.amount, 0);
+            stats.remainingSalary = stats.totalEarnings - stats.paidSalary;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user stats:', error);
       }
-      
-      // Get user's assigned orders (where they are specifically assigned as worker or transporter)
-      const userOrders = await Order.find({
-        $or: [
-          { 'workers.worker': userId },
-          { 'transporters.transporter': userId }
-        ]
-      });
-      
-      // Get user's assigned projects (where they are specifically assigned as editor)
-      const userProjects = await EditingProject.find({ editor: userId });
-      
-      const activeOrders = userOrders.filter(order => order.status !== 'completed').length;
-      const completedOrders = userOrders.filter(order => order.status === 'completed').length;
-      const activeProjects = userProjects.filter(project => project.status !== 'completed').length;
-      const completedProjects = userProjects.filter(project => project.status === 'completed').length;
-      
-      // Get user's salary info (only their own earnings)
-      const userSalaries = await Salary.find({ employee: userId });
-      const totalEarnings = userSalaries.reduce((sum, salary) => sum + salary.amount, 0);
-      const paidSalary = userSalaries.filter(s => s.isPaid).reduce((sum, salary) => sum + salary.amount, 0);
-      const remainingSalary = totalEarnings - paidSalary;
-      
-      stats = {
-        activeOrders,
-        completedOrders,
-        activeProjects,
-        completedProjects,
-        totalEarnings,
-        paidSalary,
-        remainingSalary,
-        userRole: user.role
-      };
     }
     
     res.json({ data: stats });
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ data: stats });
   }
 });
 
