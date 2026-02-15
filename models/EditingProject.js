@@ -19,7 +19,20 @@ const editingProjectSchema = new mongoose.Schema({
   },
   description: {
     type: String,
+    default: ''
+  },
+  // Editing and Pendrive values
+  editingValue: {
+    type: Number,
     required: true
+  },
+  pendriveIncluded: {
+    type: Boolean,
+    default: false
+  },
+  pendriveValue: {
+    type: Number,
+    default: 0
   },
   // Payment information
   totalAmount: {
@@ -34,7 +47,7 @@ const editingProjectSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  // Editor commission
+  // Editor commission (only on editing value, not pendrive)
   commissionPercentage: {
     type: Number,
     required: true,
@@ -61,7 +74,7 @@ const editingProjectSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['pending', 'in_progress', 'completed'],
-    default: 'pending'
+    default: 'in_progress' // Changed from 'pending' so projects are immediately visible to editors
   },
   // Owner who created the project
   createdBy: {
@@ -78,10 +91,11 @@ const editingProjectSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Calculate commission amount before saving
+// Calculate commission amount before saving (only on editing value)
 editingProjectSchema.pre('save', function(next) {
-  if (this.totalAmount && this.commissionPercentage) {
-    this.commissionAmount = Math.round((this.totalAmount * this.commissionPercentage) / 100);
+  if (this.editingValue && this.commissionPercentage) {
+    // Commission is calculated only on editing value, not pendrive
+    this.commissionAmount = Math.round((this.editingValue * this.commissionPercentage) / 100);
   }
   
   // Calculate remaining payment

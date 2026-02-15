@@ -229,9 +229,9 @@ router.post('/', async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!clientId || !orderName || !venuePlace || !totalAmount || !description || !shopName || !createdBy) {
+    if (!clientId || !orderName || !venuePlace || !totalAmount || !shopName || !createdBy) {
       return res.status(400).json({ 
-        message: 'Missing required fields: clientId, orderName, venuePlace, totalAmount, description, shopName, createdBy' 
+        message: 'Missing required fields: clientId, orderName, venuePlace, totalAmount, shopName, createdBy' 
       });
     }
 
@@ -276,7 +276,7 @@ router.post('/', async (req, res) => {
       }],
       workers: workers || [],
       transporters: transporters || [],
-      description,
+      description: description || '',
       totalAmount: Number(totalAmount),
       receivedPayment: Number(receivedPayment) || 0,
       remainingPayment: Number(totalAmount) - (Number(receivedPayment) || 0),
@@ -342,14 +342,7 @@ router.put('/:id/status', async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
     
-    // Automatically mark related salary entries as paid when order is completed
-    if (status === 'completed') {
-      try {
-        await markOrderSalariesAsPaid(order._id);
-      } catch (salaryError) {
-        console.warn('Failed to update salary status for completed order:', salaryError);
-      }
-    }
+    // Don't automatically mark salaries as paid - owner will pay manually
     
     res.json({ message: 'Order status updated', order });
   } catch (error) {

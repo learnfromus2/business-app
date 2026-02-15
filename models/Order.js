@@ -28,6 +28,10 @@ const orderSchema = new mongoose.Schema({
     price: {
       type: Number,
       required: true
+    },
+    sizeInfo: {
+      type: String,
+      default: ''
     }
   }],
   // Payment information
@@ -70,7 +74,7 @@ const orderSchema = new mongoose.Schema({
   // Order details
   description: {
     type: String,
-    required: true
+    default: ''
   },
   orderDate: {
     type: Date,

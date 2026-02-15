@@ -481,17 +481,48 @@
                 </div>
                 <div class="modal-body">
                     <form id="createProjectForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Client Name *</label>
-                                <select class="form-select" id="clientName" required>
-                                    <option value="">Select Client</option>
-                                    <!-- Clients will be loaded dynamically -->
-                                </select>
+                        <!-- Client Selection with Add New Option -->
+                        <div class="mb-3">
+                            <label class="form-label">Client *</label>
+                            <select class="form-select" id="clientName" required>
+                                <option value="">Select Client</option>
+                                <option value="add_new">+ Add New Client</option>
+                                <!-- Clients will be loaded dynamically -->
+                            </select>
+                        </div>
+                        
+                        <!-- Add New Client Form (Hidden by default) -->
+                        <div id="newClientForm" style="display: none; background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <h6 style="margin-bottom: 10px; color: #1e293b;">New Client Details</h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Client Name *</label>
+                                    <input type="text" class="form-control" id="newClientName" placeholder="Enter client name">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Phone Number *</label>
+                                    <input type="tel" class="form-control" id="newClientPhone" placeholder="Enter phone number">
+                                </div>
                             </div>
+                            <button type="button" class="btn btn-sm btn-success" onclick="saveNewClient()">
+                                <i class="fas fa-check"></i> Save Client
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="cancelNewClient()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                        
+                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Project Name *</label>
                                 <input type="text" class="form-control" id="projectName" placeholder="e.g., Wedding Video Edit" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Editor *</label>
+                                <select class="form-select" id="editor" required>
+                                    <option value="">Select Editor</option>
+                                    <!-- Editors will be loaded dynamically -->
+                                </select>
                             </div>
                         </div>
                         
@@ -506,38 +537,71 @@
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Editor *</label>
-                                <select class="form-select" id="editor" required>
-                                    <option value="">Select Editor</option>
-                                    <!-- Editors will be loaded dynamically -->
-                                </select>
+                        <div class="mb-3">
+                            <label class="form-label">Commission % *</label>
+                            <input type="number" class="form-control" id="commission" min="0" max="100" placeholder="e.g., 15" required>
+                        </div>
+                        
+                        <!-- Editing Value -->
+                        <div class="mb-3">
+                            <label class="form-label">Editing Value *</label>
+                            <input type="number" class="form-control" id="editingValue" placeholder="Enter editing amount" min="0" onchange="calculateTotalAmount()" required>
+                            <small class="text-muted">Commission will be calculated on this amount</small>
+                        </div>
+                        
+                        <!-- Pendrive Option -->
+                        <div class="mb-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="pendriveIncluded" onchange="togglePendrivePrice()">
+                                <label class="form-check-label" for="pendriveIncluded">
+                                    Include Pendrive
+                                </label>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Commission % *</label>
-                                <input type="number" class="form-control" id="commission" min="0" max="100" placeholder="e.g., 15" required>
+                            <div id="pendriveValueDiv" style="display: none;">
+                                <input type="number" class="form-control" id="pendriveValue" placeholder="Enter pendrive price" min="0" onchange="calculateTotalAmount()">
+                                <small class="text-muted">No commission on pendrive amount</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Total Amount Display -->
+                        <div class="mb-4 p-3" style="background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span style="color: #64748b;">Editing Value:</span>
+                                <span style="color: #1e293b; font-weight: 500;" id="displayEditingValue">₹0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2" id="displayPendriveRow" style="display: none !important;">
+                                <span style="color: #64748b;">Pendrive:</span>
+                                <span style="color: #1e293b; font-weight: 500;" id="displayPendriveValue">₹0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span style="color: #64748b;">Editor Commission (<span id="displayCommission">0</span>%):</span>
+                                <span style="color: #f59e0b; font-weight: 500;" id="displayCommissionAmount">₹0</span>
+                            </div>
+                            <hr style="border-color: #e2e8f0;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong style="font-size: 1.1rem; color: #1e293b;">Total Project Value:</strong>
+                                <strong style="font-size: 1.5rem; color: #3b82f6;" id="calculatedTotal">₹0</strong>
                             </div>
                         </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Project Value *</label>
-                                <input type="number" class="form-control" id="projectValue" placeholder="Total project amount" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Payment Status</label>
-                                <select class="form-select" id="paymentStatus">
+                                <label class="form-label">Payment Status *</label>
+                                <select class="form-select" id="paymentStatus" onchange="togglePartialPayment()">
                                     <option value="pending">Pending</option>
                                     <option value="partial">Partial</option>
                                     <option value="completed">Completed</option>
                                 </select>
                             </div>
+                            <div class="col-md-6 mb-3" id="partialPaymentDiv" style="display: none;">
+                                <label class="form-label">Payment Amount Received *</label>
+                                <input type="number" class="form-control" id="partialPaymentAmount" placeholder="Enter amount received" min="1">
+                            </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Project Description *</label>
-                            <textarea class="form-control" id="description" rows="3" placeholder="Describe the editing requirements..." required></textarea>
+                            <label class="form-label">Project Description</label>
+                            <textarea class="form-control" id="description" rows="3" placeholder="Describe the editing requirements (optional)"></textarea>
                         </div>
                     </form>
                 </div>
@@ -561,6 +625,17 @@
             setTodayDate();
             loadDropdownData();
             
+            // Setup client select change handler
+            const clientSelect = document.getElementById('clientName');
+            if (clientSelect) {
+                clientSelect.addEventListener('change', function() {
+                    if (this.value === 'add_new') {
+                        document.getElementById('newClientForm').style.display = 'block';
+                        this.value = ''; // Reset selection
+                    }
+                });
+            }
+            
             // Reset form when modal is opened
             const createProjectModal = document.getElementById('createProjectModal');
             createProjectModal.addEventListener('show.bs.modal', function() {
@@ -573,6 +648,68 @@
             const form = document.getElementById('createProjectForm');
             form.reset();
             setTodayDate();
+            
+            // Reset calculated values
+            document.getElementById('calculatedTotal').textContent = '₹0';
+            document.getElementById('displayEditingValue').textContent = '₹0';
+            document.getElementById('displayPendriveValue').textContent = '₹0';
+            document.getElementById('displayCommission').textContent = '0';
+            document.getElementById('displayCommissionAmount').textContent = '₹0';
+            
+            // Hide pendrive input
+            document.getElementById('pendriveValueDiv').style.display = 'none';
+            document.getElementById('displayPendriveRow').style.display = 'none';
+            
+            // Hide partial payment
+            document.getElementById('partialPaymentDiv').style.display = 'none';
+            document.getElementById('partialPaymentAmount').required = false;
+            
+            // Hide add client form
+            cancelNewClient();
+        }
+        
+        // Toggle pendrive price input
+        function togglePendrivePrice() {
+            const pendriveChecked = document.getElementById('pendriveIncluded').checked;
+            const pendriveValueDiv = document.getElementById('pendriveValueDiv');
+            const pendriveValueInput = document.getElementById('pendriveValue');
+            const displayPendriveRow = document.getElementById('displayPendriveRow');
+            
+            if (pendriveChecked) {
+                pendriveValueDiv.style.display = 'block';
+                pendriveValueInput.required = true;
+                displayPendriveRow.style.display = 'flex';
+            } else {
+                pendriveValueDiv.style.display = 'none';
+                pendriveValueInput.required = false;
+                pendriveValueInput.value = '';
+                displayPendriveRow.style.display = 'none';
+            }
+            
+            calculateTotalAmount();
+        }
+        
+        // Calculate total amount
+        function calculateTotalAmount() {
+            const editingValue = parseFloat(document.getElementById('editingValue').value) || 0;
+            const pendriveValue = document.getElementById('pendriveIncluded').checked ? 
+                (parseFloat(document.getElementById('pendriveValue').value) || 0) : 0;
+            const commissionPercent = parseFloat(document.getElementById('commission').value) || 0;
+            
+            // Calculate commission only on editing value
+            const commissionAmount = Math.round((editingValue * commissionPercent) / 100);
+            
+            // Total is editing + pendrive
+            const total = editingValue + pendriveValue;
+            
+            // Update display
+            document.getElementById('displayEditingValue').textContent = `₹${editingValue.toLocaleString()}`;
+            document.getElementById('displayPendriveValue').textContent = `₹${pendriveValue.toLocaleString()}`;
+            document.getElementById('displayCommission').textContent = commissionPercent;
+            document.getElementById('displayCommissionAmount').textContent = `₹${commissionAmount.toLocaleString()}`;
+            document.getElementById('calculatedTotal').textContent = `₹${total.toLocaleString()}`;
+            
+            return total;
         }
         
         // Load dropdown data for form
@@ -608,25 +745,19 @@
                     
                     const clientSelect = document.getElementById('clientName');
                     
-                    // Clear existing options except the first one
-                    clientSelect.innerHTML = '<option value="">Select Client</option>';
+                    // Clear existing options except the first two (Select and Add New)
+                    clientSelect.innerHTML = '<option value="">Select Client</option><option value="add_new">+ Add New Client</option>';
                     
                     if (data.data && data.data.length > 0) {
                         data.data.forEach(client => {
                             const option = document.createElement('option');
                             option.value = client._id;
-                            option.textContent = client.name;
+                            option.textContent = `${client.name} (${client.phone})`;
                             clientSelect.appendChild(option);
                         });
                         console.log(`Loaded ${data.data.length} clients successfully`);
                     } else {
                         console.log('No clients found in database');
-                        // Add a message option
-                        const option = document.createElement('option');
-                        option.value = '';
-                        option.textContent = 'No clients available - Add clients first';
-                        option.disabled = true;
-                        clientSelect.appendChild(option);
                     }
                 } else {
                     console.error('Failed to load clients:', response.status);
@@ -635,10 +766,104 @@
                 }
             } catch (error) {
                 console.error('Error loading clients:', error);
-                // Add error message to dropdown
-                const clientSelect = document.getElementById('clientName');
-                clientSelect.innerHTML = '<option value="">Error loading clients</option>';
             }
+        }
+        
+        // Toggle partial payment amount field
+        function togglePartialPayment() {
+            const paymentStatus = document.getElementById('paymentStatus').value;
+            const partialPaymentDiv = document.getElementById('partialPaymentDiv');
+            const partialPaymentAmount = document.getElementById('partialPaymentAmount');
+            
+            if (paymentStatus === 'partial') {
+                partialPaymentDiv.style.display = 'block';
+                partialPaymentAmount.required = true;
+            } else {
+                partialPaymentDiv.style.display = 'none';
+                partialPaymentAmount.required = false;
+                partialPaymentAmount.value = '';
+            }
+        }
+        
+        // Save new client
+        async function saveNewClient() {
+            const name = document.getElementById('newClientName').value.trim();
+            const phone = document.getElementById('newClientPhone').value.trim();
+            
+            if (!name || !phone) {
+                alert('Please enter both client name and phone number');
+                return;
+            }
+            
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                
+                const newClient = {
+                    name: name,
+                    phone: phone,
+                    shopName: userData.shopName,
+                    createdBy: userData._id || userData.id
+                };
+                
+                console.log('Creating new client:', newClient);
+                
+                const response = await fetch('/api/clients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newClient)
+                });
+                
+                const result = await response.json();
+                console.log('Client creation response:', result);
+                
+                if (response.ok) {
+                    // Handle different response structures
+                    const clientData = result.data || result.client || result;
+                    
+                    if (!clientData || !clientData._id) {
+                        console.error('Invalid response structure:', result);
+                        alert('Client created but response format is unexpected. Please refresh the page.');
+                        return;
+                    }
+                    
+                    // Add new client to dropdown
+                    const clientSelect = document.getElementById('clientName');
+                    const option = document.createElement('option');
+                    option.value = clientData._id;
+                    option.textContent = `${clientData.name} (${clientData.phone})`;
+                    option.selected = true;
+                    
+                    // Insert before the "Add New Client" option (second option)
+                    const addNewOption = clientSelect.querySelector('option[value="add_new"]');
+                    if (addNewOption && addNewOption.nextSibling) {
+                        clientSelect.insertBefore(option, addNewOption.nextSibling);
+                    } else {
+                        clientSelect.appendChild(option);
+                    }
+                    
+                    // Hide the new client form
+                    document.getElementById('newClientForm').style.display = 'none';
+                    document.getElementById('newClientName').value = '';
+                    document.getElementById('newClientPhone').value = '';
+                    
+                    alert('Client added successfully!');
+                } else {
+                    alert(`Failed to add client: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error adding client:', error);
+                alert('Failed to add client. Please try again.');
+            }
+        }
+        
+        // Cancel new client
+        function cancelNewClient() {
+            document.getElementById('newClientForm').style.display = 'none';
+            document.getElementById('newClientName').value = '';
+            document.getElementById('newClientPhone').value = '';
+            document.getElementById('clientName').value = '';
         }
         
         // Load editors for dropdown
@@ -795,6 +1020,12 @@
                     href: 'workers.html',
                     icon: 'fas fa-hard-hat',
                     text: 'Workers & Editors',
+                    active: false
+                });
+                navItems.push({
+                    href: 'calendar.html',
+                    icon: 'fas fa-calendar-alt',
+                    text: 'Calendar',
                     active: false
                 });
             }
@@ -1015,39 +1246,19 @@
                 'Editor' : 
                 `${editorName} <span class="commission-badge ms-2">${project.commissionPercentage || 0}%</span>`;
             
-            // Calculate progress (if not provided, estimate based on dates)
-            let progress = 0;
-            if (project.status === 'completed') {
-                progress = 100;
-            } else if (project.startDate && project.endDate) {
-                const start = new Date(project.startDate);
-                const end = new Date(project.endDate);
-                const now = new Date();
-                const total = end - start;
-                const elapsed = now - start;
-                progress = Math.max(0, Math.min(100, Math.round((elapsed / total) * 100)));
-            }
-            
             // Check if user is owner to show completion buttons and delete button
             const userData = JSON.parse(localStorage.getItem('user'));
             const isOwner = userData && userData.role && userData.role.toLowerCase() === 'owner';
             
-            // Create completion buttons for owners
+            // Create completion button for owners (only Mark Completed)
             let completionButtons = '';
             if (isOwner && project.status !== 'completed') {
                 completionButtons = `
                     <div class="completion-buttons">
                         <div class="d-flex gap-2 flex-wrap">
-                            ${project.status === 'pending' ? `
-                                <button class="btn btn-primary" onclick="updateProjectStatus('${project._id}', 'in_progress')">
-                                    <i class="fas fa-play"></i> Start Project
-                                </button>
-                            ` : ''}
-                            ${project.status === 'in_progress' ? `
-                                <button class="btn btn-success" onclick="updateProjectStatus('${project._id}', 'completed')">
-                                    <i class="fas fa-check"></i> Mark Completed
-                                </button>
-                            ` : ''}
+                            <button class="btn btn-success" onclick="updateProjectStatus('${project._id}', 'completed')">
+                                <i class="fas fa-check"></i> Mark Completed
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1091,19 +1302,12 @@
                     </div>
                 </div>
                 <div class="row mt-2">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <strong>Duration:</strong><br>
                         <span style="color: #64748b;">
                             ${project.startDate ? new Date(project.startDate).toLocaleDateString() : 'Not set'} - 
                             ${project.endDate ? new Date(project.endDate).toLocaleDateString() : 'Not set'}
                         </span>
-                    </div>
-                    <div class="col-md-6">
-                        <strong>Progress:</strong><br>
-                        <span style="color: #64748b;">${progress}% Complete</span>
-                        <div class="progress-bar-custom">
-                            <div class="progress-fill" style="width: ${progress}%"></div>
-                        </div>
                     </div>
                 </div>
                 ${project.description ? `
@@ -1141,14 +1345,29 @@
             const endDate = document.getElementById('endDate').value;
             const editorId = document.getElementById('editor').value;
             const commission = document.getElementById('commission').value;
-            const projectValue = document.getElementById('projectValue').value;
+            const editingValue = parseFloat(document.getElementById('editingValue').value) || 0;
+            const pendriveIncluded = document.getElementById('pendriveIncluded').checked;
+            const pendriveValue = pendriveIncluded ? (parseFloat(document.getElementById('pendriveValue').value) || 0) : 0;
             const paymentStatus = document.getElementById('paymentStatus').value;
             const description = document.getElementById('description').value.trim();
             
-            if (!clientId || !projectName || !startDate || !endDate || !editorId || !commission || !projectValue || !description) {
+            if (!clientId || !projectName || !startDate || !endDate || !editorId || !commission || !editingValue) {
                 alert('Please fill in all required fields');
                 return;
             }
+            
+            if (editingValue <= 0) {
+                alert('Editing value must be greater than 0');
+                return;
+            }
+            
+            if (pendriveIncluded && pendriveValue <= 0) {
+                alert('Please enter a valid pendrive price');
+                return;
+            }
+            
+            // Calculate total
+            const projectValue = editingValue + pendriveValue;
             
             // Validate dates
             if (new Date(startDate) >= new Date(endDate)) {
@@ -1163,6 +1382,23 @@
                 return;
             }
             
+            // Calculate received payment based on status
+            let receivedPayment = 0;
+            if (paymentStatus === 'completed') {
+                receivedPayment = projectValue;
+            } else if (paymentStatus === 'partial') {
+                const partialAmount = document.getElementById('partialPaymentAmount').value;
+                if (!partialAmount || partialAmount <= 0) {
+                    alert('Please enter a valid payment amount for partial payment');
+                    return;
+                }
+                if (parseInt(partialAmount) >= projectValue) {
+                    alert('Partial payment amount must be less than total project value');
+                    return;
+                }
+                receivedPayment = parseInt(partialAmount);
+            }
+            
             try {
                 const userData = JSON.parse(localStorage.getItem('user'));
                 
@@ -1175,21 +1411,16 @@
                     createdById = '507f1f77bcf86cd799439011';
                 }
                 
-                // Calculate received payment based on status
-                let receivedPayment = 0;
-                if (paymentStatus === 'completed') {
-                    receivedPayment = parseInt(projectValue);
-                } else if (paymentStatus === 'partial') {
-                    receivedPayment = Math.round(parseInt(projectValue) * 0.5);
-                }
-                
-                // Create new project object matching the API expectations
+                // Create new project object
                 const newProject = {
                     clientId: clientId,
                     editorId: editorId,
                     projectName: projectName,
-                    description: description,
-                    totalAmount: parseInt(projectValue),
+                    description: description || '',
+                    editingValue: editingValue,
+                    pendriveIncluded: pendriveIncluded,
+                    pendriveValue: pendriveValue,
+                    totalAmount: projectValue,
                     commissionPercentage: commissionNum,
                     startDate: startDate,
                     endDate: endDate,
@@ -1230,8 +1461,18 @@
                 form.reset();
                 setTodayDate();
                 
-                const commissionAmount = Math.round((parseInt(projectValue) * commissionNum) / 100);
-                alert(`Project created successfully!\nProject Value: ₹${parseInt(projectValue).toLocaleString()}\nEditor Commission: ₹${commissionAmount.toLocaleString()} (${commissionNum}%)\nNet Profit: ₹${(parseInt(projectValue) - commissionAmount).toLocaleString()}`);
+                const commissionAmount = Math.round((editingValue * commissionNum) / 100);
+                const netProfit = projectValue - commissionAmount;
+                
+                let alertMessage = `Project created successfully!\n\nEditing Value: ₹${editingValue.toLocaleString()}`;
+                if (pendriveIncluded) {
+                    alertMessage += `\nPendrive: ₹${pendriveValue.toLocaleString()}`;
+                }
+                alertMessage += `\nTotal Project Value: ₹${projectValue.toLocaleString()}`;
+                alertMessage += `\n\nEditor Commission (${commissionNum}%): ₹${commissionAmount.toLocaleString()}`;
+                alertMessage += `\nNet Profit: ₹${netProfit.toLocaleString()}`;
+                
+                alert(alertMessage);
                 
             } catch (error) {
                 console.error('Error creating project:', error);

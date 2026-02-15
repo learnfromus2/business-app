@@ -28,6 +28,7 @@ app.use('/api/clients', require('./routes/clients'));
 app.use('/api/salary', require('./routes/salary'));
 app.use('/api/transportation', require('./routes/transportation'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/payments', require('./routes/payments'));
 
 // Test endpoint to check database data
 app.get('/api/test/data', async (req, res) => {

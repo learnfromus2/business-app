@@ -49,7 +49,7 @@ router.get('/', async (req, res) => {
   try {
     const { shopName, userRole, userId } = req.query;
     
-    console.log('Editing API called with:', { shopName, userRole, userId });
+    console.log('🎬 Editing API called with:', { shopName, userRole, userId });
     
     let filter = {};
     let userObjectId = null; // Declare at the top level
@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
     if (shopName && userRole !== 'owner') {
       // For non-owners, filter by shop and their assignments
       if (!userId || userId === 'undefined') {
-        console.log('No userId provided for non-owner');
+        console.log('❌ No userId provided for non-owner');
         return res.json({ data: [] }); // Return empty array instead of error
       }
       
@@ -66,17 +66,17 @@ router.get('/', async (req, res) => {
       if (mongoose.Types.ObjectId.isValid(userId)) {
         // Already a MongoDB ObjectId
         userObjectId = userId;
-        console.log('Using MongoDB ObjectId directly:', userObjectId);
+        console.log('✅ Using MongoDB ObjectId directly:', userObjectId);
       } else {
         // Firebase UID - find user first
-        console.log('Looking up Firebase UID:', userId);
+        console.log('🔍 Looking up Firebase UID:', userId);
         const user = await User.findOne({ firebaseUID: userId });
         if (!user) {
-          console.log('User not found for Firebase UID:', userId);
+          console.log('❌ User not found for Firebase UID:', userId);
           return res.json({ data: [] }); // Return empty array if user not found
         }
-        userObjectId = user._id;
-        console.log('Found user with MongoDB ObjectId:', userObjectId);
+        userObjectId = user._id.toString();
+        console.log('✅ Found user with MongoDB ObjectId:', userObjectId);
       }
       
       filter = { 
@@ -84,11 +84,11 @@ router.get('/', async (req, res) => {
         editor: userObjectId
       };
       
-      console.log('Editing filter for non-owner:', JSON.stringify(filter, null, 2));
+      console.log('🔍 Editing filter for non-owner:', JSON.stringify(filter, null, 2));
     } else if (shopName && userRole === 'owner') {
       // Owners see all projects from their shop
       filter = { shopName: shopName };
-      console.log('Editing filter for owner:', JSON.stringify(filter, null, 2));
+      console.log('🔍 Editing filter for owner:', JSON.stringify(filter, null, 2));
     }
     
     const projects = await EditingProject.find(filter)
@@ -96,17 +96,19 @@ router.get('/', async (req, res) => {
       .populate('editor', 'firstName lastName shopName')
       .sort({ createdAt: -1 });
     
-    console.log(`Found ${projects.length} projects for user ${userId}`);
+    console.log(`📊 Found ${projects.length} projects for user ${userId}`);
     
     // Debug: Show editor assignments for each project
     projects.forEach((project, index) => {
-      console.log(`Project ${index + 1}: ${project.projectName || project.description}`);
-      console.log('  Editor:', { id: project.editor?._id, name: project.editor ? `${project.editor.firstName} ${project.editor.lastName}` : 'Unknown' });
+      console.log(`  Project ${index + 1}: ${project.projectName || project.description}`);
+      console.log(`    Editor ID: ${project.editor?._id}`);
+      console.log(`    Editor Name: ${project.editor ? `${project.editor.firstName} ${project.editor.lastName}` : 'Unknown'}`);
+      console.log(`    Matches filter: ${project.editor?._id.toString() === userObjectId}`);
     });
     
     res.json({ data: projects });
   } catch (error) {
-    console.error('Error fetching projects:', error);
+    console.error('❌ Error fetching projects:', error);
     res.json({ data: [] }); // Return empty array on error instead of 500
   }
 });
@@ -121,6 +123,9 @@ router.post('/', async (req, res) => {
       editorId,
       projectName,
       description,
+      editingValue,
+      pendriveIncluded,
+      pendriveValue,
       totalAmount,
       commissionPercentage,
       startDate,
@@ -130,10 +135,10 @@ router.post('/', async (req, res) => {
       createdBy
     } = req.body;
 
-    // Validate required fields
-    if (!clientId || !editorId || !projectName || !description || !totalAmount || !commissionPercentage || !endDate || !shopName || !createdBy) {
+    // Validate required fields (description is now optional)
+    if (!clientId || !editorId || !projectName || !editingValue || !totalAmount || !commissionPercentage || !endDate || !shopName || !createdBy) {
       return res.status(400).json({ 
-        message: 'Missing required fields: clientId, editorId, projectName, description, totalAmount, commissionPercentage, endDate, shopName, createdBy' 
+        message: 'Missing required fields: clientId, editorId, projectName, editingValue, totalAmount, commissionPercentage, endDate, shopName, createdBy' 
       });
     }
 
@@ -150,14 +155,17 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Invalid createdBy ID' });
     }
 
-    // Calculate commission amount
-    const commissionAmount = Math.round((Number(totalAmount) * Number(commissionPercentage)) / 100);
+    // Calculate commission amount (only on editing value, not pendrive)
+    const commissionAmount = Math.round((Number(editingValue) * Number(commissionPercentage)) / 100);
 
     const project = new EditingProject({
       client: clientId,
       editor: editorId,
       projectName,
-      description,
+      description: description || '',
+      editingValue: Number(editingValue),
+      pendriveIncluded: pendriveIncluded || false,
+      pendriveValue: Number(pendriveValue) || 0,
       totalAmount: Number(totalAmount),
       commissionPercentage: Number(commissionPercentage),
       commissionAmount: commissionAmount,
@@ -226,14 +234,7 @@ router.put('/:id/status', async (req, res) => {
       return res.status(404).json({ message: 'Project not found' });
     }
     
-    // Automatically mark related salary entry as paid when project is completed
-    if (status === 'completed') {
-      try {
-        await markProjectSalaryAsPaid(project._id);
-      } catch (salaryError) {
-        console.warn('Failed to update salary status for completed project:', salaryError);
-      }
-    }
+    // Don't automatically mark salaries as paid - owner will pay manually
     
     res.json({ message: 'Project status updated', project });
   } catch (error) {

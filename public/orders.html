@@ -267,7 +267,7 @@
         }
         
         /* Dynamic rows styling */
-        .worker-row, .transporter-row {
+        .worker-row, .transporter-row, .product-row {
             background: #f8fafc;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
@@ -275,7 +275,7 @@
             margin-bottom: 8px;
         }
         
-        .worker-row:hover, .transporter-row:hover {
+        .worker-row:hover, .transporter-row:hover, .product-row:hover {
             background: #f1f5f9;
         }
         
@@ -303,6 +303,18 @@
         
         #transportersContainer:empty::after {
             content: "No transporters added yet. Click 'Add Transporter' to assign transporters to this order.";
+            display: block;
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+            padding: 20px;
+            background: #f8fafc;
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+        }
+        
+        #productsContainer:empty::after {
+            content: "No products added yet. Click 'Add Product' to add products to this order.";
             display: block;
             text-align: center;
             color: #64748b;
@@ -507,14 +519,38 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Client Name *</label>
-                                <select class="form-select" id="clientName" required>
+                                <select class="form-select" id="clientName" onchange="handleClientSelection()" required>
                                     <option value="">Select Client</option>
+                                    <option value="add_new" style="color: #3b82f6; font-weight: 600;">+ Add New Client</option>
                                     <!-- Clients will be loaded dynamically -->
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Order Date *</label>
                                 <input type="date" class="form-control" id="orderDate" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Add New Client Form (hidden by default) -->
+                        <div id="addClientForm" style="display: none; background: #f8fafc; border: 2px solid #3b82f6; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                            <h6 style="color: #3b82f6; margin-bottom: 12px;">
+                                <i class="fas fa-user-plus"></i> Add New Client
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <input type="text" class="form-control" id="newClientName" placeholder="Client Name *" required>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <input type="tel" class="form-control" id="newClientPhone" placeholder="Phone Number *" required>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2 mt-2">
+                                <button type="button" class="btn btn-sm btn-primary" onclick="saveNewClient()">
+                                    <i class="fas fa-check"></i> Save Client
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="cancelAddClient()">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
                             </div>
                         </div>
                         
@@ -531,12 +567,13 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Total Amount *</label>
-                                <input type="number" class="form-control" id="totalAmount" required>
+                                <label class="form-label">Total Amount (Auto-calculated) *</label>
+                                <input type="number" class="form-control" id="totalAmount" readonly style="background-color: #f1f5f9; cursor: not-allowed;" required>
+                                <small class="text-muted">This will be calculated automatically from products</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Payment Status</label>
-                                <select class="form-select" id="paymentStatus">
+                                <select class="form-select" id="paymentStatus" onchange="handlePaymentStatusChange()">
                                     <option value="pending">Pending</option>
                                     <option value="partial">Partial</option>
                                     <option value="completed">Completed</option>
@@ -544,9 +581,40 @@
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Description *</label>
-                            <textarea class="form-control" id="description" rows="3" placeholder="Order description..." required></textarea>
+                        <!-- Partial Payment Amount (shown only when Partial is selected) -->
+                        <div class="row" id="partialPaymentRow" style="display: none;">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Payment Amount Received *</label>
+                                <input type="number" class="form-control" id="receivedPaymentAmount" placeholder="Enter amount received" min="0">
+                                <small class="text-muted">Enter the partial payment amount received from client</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Products Section -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="form-label mb-0">Products</label>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="addProductRow()">
+                                    <i class="fas fa-plus me-1"></i> Add Product
+                                </button>
+                            </div>
+                            <div id="productsContainer">
+                                <!-- Product rows will be added here -->
+                            </div>
+                            <div class="mt-3 p-3" style="background: white; border-radius: 8px; border: 1px solid #e2e8f0;">
+                                <h6 class="mb-3" style="color: #1e293b; border-bottom: 2px solid #3b82f6; padding-bottom: 8px;">Bill Summary</h6>
+                                <div id="billSummary" style="color: #64748b; font-size: 0.9rem;">
+                                    <div class="text-center py-3" style="font-style: italic;">
+                                        Add products to see bill summary
+                                    </div>
+                                </div>
+                                <div class="mt-3 pt-3" style="border-top: 2px solid #e2e8f0;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <strong style="font-size: 1.1rem; color: #1e293b;">Total Amount:</strong>
+                                        <strong style="font-size: 1.5rem; color: #3b82f6;" id="calculatedTotal">₹0</strong>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Workers Section -->
@@ -573,6 +641,11 @@
                             <div id="transportersContainer">
                                 <!-- Transporter rows will be added here -->
                             </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="description" rows="3" placeholder="Additional notes or description..."></textarea>
                         </div>
                     </form>
                 </div>
@@ -609,8 +682,20 @@
             // Clear dynamic rows
             document.getElementById('workersContainer').innerHTML = '';
             document.getElementById('transportersContainer').innerHTML = '';
+            document.getElementById('productsContainer').innerHTML = '';
             workerCounter = 0;
             transporterCounter = 0;
+            productCounter = 0;
+            
+            // Reset calculated total
+            document.getElementById('calculatedTotal').textContent = '₹0';
+            
+            // Hide partial payment row
+            document.getElementById('partialPaymentRow').style.display = 'none';
+            document.getElementById('receivedPaymentAmount').required = false;
+            
+            // Hide add client form
+            cancelAddClient();
             
             // Set today's date
             setTodayDate();
@@ -630,6 +715,7 @@
         let availableTransporters = [];
         let workerCounter = 0;
         let transporterCounter = 0;
+        let productCounter = 0;
         
         // Load clients for dropdown
         async function loadClients() {
@@ -656,25 +742,21 @@
                     
                     const clientSelect = document.getElementById('clientName');
                     
-                    // Clear existing options except the first one
-                    clientSelect.innerHTML = '<option value="">Select Client</option>';
+                    // Clear existing options except the first one and "Add New Client"
+                    clientSelect.innerHTML = '<option value="">Select Client</option><option value="add_new" style="color: #3b82f6; font-weight: 600;">+ Add New Client</option>';
                     
                     if (data.data && data.data.length > 0) {
                         data.data.forEach(client => {
                             const option = document.createElement('option');
                             option.value = client._id;
-                            option.textContent = client.name;
-                            clientSelect.appendChild(option);
+                            option.textContent = `${client.name} (${client.phone})`;
+                            // Insert before the "Add New Client" option
+                            const addNewOption = clientSelect.querySelector('option[value="add_new"]');
+                            clientSelect.insertBefore(option, addNewOption);
                         });
                         console.log(`Loaded ${data.data.length} clients successfully`);
                     } else {
                         console.log('No clients found in database');
-                        // Add a message option
-                        const option = document.createElement('option');
-                        option.value = '';
-                        option.textContent = 'No clients available - Add clients first';
-                        option.disabled = true;
-                        clientSelect.appendChild(option);
                     }
                 } else {
                     console.error('Failed to load clients:', response.status);
@@ -683,9 +765,9 @@
                 }
             } catch (error) {
                 console.error('Error loading clients:', error);
-                // Add error message to dropdown
+                // Keep the "Add New Client" option even on error
                 const clientSelect = document.getElementById('clientName');
-                clientSelect.innerHTML = '<option value="">Error loading clients</option>';
+                clientSelect.innerHTML = '<option value="">Select Client</option><option value="add_new" style="color: #3b82f6; font-weight: 600;">+ Add New Client</option>';
             }
         }
         
@@ -809,6 +891,161 @@
             }
         }
         
+        // Add product row
+        function addProductRow() {
+            productCounter++;
+            const container = document.getElementById('productsContainer');
+            
+            const productRow = document.createElement('div');
+            productRow.className = 'row mb-2 product-row';
+            productRow.id = `productRow${productCounter}`;
+            
+            productRow.innerHTML = `
+                <div class="col-md-3">
+                    <select class="form-select" name="productType" onchange="handleProductTypeChange(${productCounter})" required>
+                        <option value="">Select Product</option>
+                        <option value="LED">LED</option>
+                        <option value="Mixer">Mixer</option>
+                        <option value="Plasma">Plasma</option>
+                        <option value="Drone">Drone</option>
+                        <option value="Camera">Camera</option>
+                        <option value="LED Flooring">LED Flooring</option>
+                    </select>
+                </div>
+                <div class="col-md-3" id="quantityCol${productCounter}">
+                    <input type="number" class="form-control" name="productQuantity" placeholder="Quantity" min="1" value="1" onchange="calculateTotalAmount()" required>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" class="form-control" name="productPrice" placeholder="Price per unit" min="0" onchange="calculateTotalAmount()" required>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="removeProductRow(${productCounter})">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(productRow);
+        }
+        
+        // Handle product type change (switch between quantity and size inputs)
+        function handleProductTypeChange(id) {
+            const row = document.getElementById(`productRow${id}`);
+            const productSelect = row.querySelector('select[name="productType"]');
+            const quantityCol = document.getElementById(`quantityCol${id}`);
+            const priceCol = row.querySelector('input[name="productPrice"]');
+            const productType = productSelect.value;
+            
+            // For LED and LED Flooring, show size input instead of quantity
+            if (productType === 'LED' || productType === 'LED Flooring') {
+                quantityCol.innerHTML = `
+                    <input type="number" class="form-control" name="productSize" placeholder="Size (feet)" min="1" onchange="calculateTotalAmount()" required>
+                `;
+                // Update price placeholder for LED/LED Flooring
+                priceCol.placeholder = "Price per foot";
+            } else {
+                quantityCol.innerHTML = `
+                    <input type="number" class="form-control" name="productQuantity" placeholder="Quantity" min="1" value="1" onchange="calculateTotalAmount()" required>
+                `;
+                // Update price placeholder for other products
+                priceCol.placeholder = "Price per unit";
+            }
+        }
+        
+        // Remove product row
+        function removeProductRow(id) {
+            const row = document.getElementById(`productRow${id}`);
+            if (row) {
+                row.remove();
+                calculateTotalAmount();
+            }
+        }
+        
+        // Calculate total amount from all products
+        function calculateTotalAmount() {
+            const productRows = document.querySelectorAll('.product-row');
+            let total = 0;
+            let billHTML = '';
+            
+            if (productRows.length === 0) {
+                document.getElementById('billSummary').innerHTML = `
+                    <div class="text-center py-3" style="font-style: italic;">
+                        Add products to see bill summary
+                    </div>
+                `;
+                document.getElementById('calculatedTotal').textContent = '₹0';
+                document.getElementById('totalAmount').value = 0;
+                return 0;
+            }
+            
+            // Build bill summary table
+            billHTML = `
+                <table class="table table-sm mb-0" style="font-size: 0.875rem;">
+                    <thead style="background: #f8fafc;">
+                        <tr>
+                            <th style="border: none; padding: 8px;">Product</th>
+                            <th style="border: none; padding: 8px; text-align: center;">Qty/Size</th>
+                            <th style="border: none; padding: 8px; text-align: right;">Unit Price</th>
+                            <th style="border: none; padding: 8px; text-align: right;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            productRows.forEach((row, index) => {
+                const productType = row.querySelector('select[name="productType"]').value;
+                const priceInput = row.querySelector('input[name="productPrice"]');
+                const price = parseFloat(priceInput?.value) || 0;
+                
+                let quantity = 1;
+                let quantityDisplay = '';
+                let unitLabel = '';
+                
+                // Check if it's LED or LED Flooring (size-based)
+                if (productType === 'LED' || productType === 'LED Flooring') {
+                    const sizeInput = row.querySelector('input[name="productSize"]');
+                    quantity = parseFloat(sizeInput?.value) || 0;
+                    quantityDisplay = `${quantity} ft`;
+                    unitLabel = '₹/ft';
+                } else {
+                    const quantityInput = row.querySelector('input[name="productQuantity"]');
+                    quantity = parseFloat(quantityInput?.value) || 1;
+                    quantityDisplay = `${quantity}`;
+                    unitLabel = '₹/unit';
+                }
+                
+                const lineTotal = price * quantity;
+                total += lineTotal;
+                
+                if (productType) {
+                    billHTML += `
+                        <tr style="border-bottom: 1px solid #f1f5f9;">
+                            <td style="padding: 8px; color: #1e293b;">${productType}</td>
+                            <td style="padding: 8px; text-align: center; color: #64748b;">${quantityDisplay}</td>
+                            <td style="padding: 8px; text-align: right; color: #64748b;">₹${price.toLocaleString()} ${unitLabel}</td>
+                            <td style="padding: 8px; text-align: right; color: #1e293b; font-weight: 500;">₹${lineTotal.toLocaleString()}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            billHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            // Update the bill summary
+            document.getElementById('billSummary').innerHTML = billHTML;
+            
+            // Update the calculated total display
+            document.getElementById('calculatedTotal').textContent = `₹${total.toLocaleString()}`;
+            
+            // Also update the total amount field
+            document.getElementById('totalAmount').value = total;
+            
+            return total;
+        }
+        
         // Check authentication and setup role-based access
         function checkAuth() {
             const userData = localStorage.getItem('user');
@@ -923,6 +1160,12 @@
                     href: 'workers.html',
                     icon: 'fas fa-hard-hat',
                     text: 'Workers & Editors',
+                    active: false
+                });
+                navItems.push({
+                    href: 'calendar.html',
+                    icon: 'fas fa-calendar-alt',
+                    text: 'Calendar',
                     active: false
                 });
             }
@@ -1211,6 +1454,20 @@ Check console for detailed information.
                 }).join(', ');
             }
             
+            // Get products info
+            let productsInfo = 'No products';
+            if (order.products && order.products.length > 0) {
+                productsInfo = order.products.map(p => {
+                    let productStr = `${p.name}`;
+                    if (p.sizeInfo) {
+                        productStr += ` (${p.sizeInfo})`;
+                    } else {
+                        productStr += ` (×${p.quantity})`;
+                    }
+                    return productStr;
+                }).join(', ');
+            }
+            
             const amountLabel = isPersonalView ? 'My Earnings' : 'Total Amount';
             const workersLabel = isPersonalView ? 'My Role' : 'Workers';
             
@@ -1285,6 +1542,12 @@ Check console for detailed information.
                         <span style="color: #64748b;">${new Date(order.orderDate || order.createdAt).toLocaleDateString()}</span>
                     </div>
                 </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <strong>Products:</strong><br>
+                        <span style="color: #64748b; font-size: 0.875rem;">${productsInfo}</span>
+                    </div>
+                </div>
                 ${order.description ? `
                 <div class="row mt-2">
                     <div class="col-12">
@@ -1303,6 +1566,106 @@ Check console for detailed information.
         function setTodayDate() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('orderDate').value = today;
+        }
+        
+        // Handle payment status change
+        function handlePaymentStatusChange() {
+            const paymentStatus = document.getElementById('paymentStatus').value;
+            const partialPaymentRow = document.getElementById('partialPaymentRow');
+            const receivedPaymentInput = document.getElementById('receivedPaymentAmount');
+            
+            if (paymentStatus === 'partial') {
+                partialPaymentRow.style.display = 'block';
+                receivedPaymentInput.required = true;
+            } else {
+                partialPaymentRow.style.display = 'none';
+                receivedPaymentInput.required = false;
+                receivedPaymentInput.value = '';
+            }
+        }
+        
+        // Handle client selection
+        function handleClientSelection() {
+            const clientSelect = document.getElementById('clientName');
+            const addClientForm = document.getElementById('addClientForm');
+            
+            if (clientSelect.value === 'add_new') {
+                addClientForm.style.display = 'block';
+                // Reset the select to empty
+                clientSelect.value = '';
+            } else {
+                addClientForm.style.display = 'none';
+            }
+        }
+        
+        // Cancel add client
+        function cancelAddClient() {
+            document.getElementById('addClientForm').style.display = 'none';
+            document.getElementById('newClientName').value = '';
+            document.getElementById('newClientPhone').value = '';
+        }
+        
+        // Save new client
+        async function saveNewClient() {
+            const name = document.getElementById('newClientName').value.trim();
+            const phone = document.getElementById('newClientPhone').value.trim();
+            
+            if (!name || !phone) {
+                alert('Please enter both client name and phone number');
+                return;
+            }
+            
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                
+                const newClient = {
+                    name: name,
+                    phone: phone,
+                    email: '', // Optional
+                    shopName: userData.shopName,
+                    createdBy: userData._id || userData.id
+                };
+                
+                console.log('Creating new client:', newClient);
+                
+                const response = await fetch('/api/clients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newClient)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to create client');
+                }
+                
+                const result = await response.json();
+                console.log('Client created successfully:', result);
+                
+                // Add the new client to the dropdown
+                const clientSelect = document.getElementById('clientName');
+                const newOption = document.createElement('option');
+                newOption.value = result.client._id;
+                newOption.textContent = `${result.client.name} (${result.client.phone})`;
+                
+                // Insert before the "Add New Client" option
+                const addNewOption = clientSelect.querySelector('option[value="add_new"]');
+                clientSelect.insertBefore(newOption, addNewOption);
+                
+                // Select the newly created client
+                clientSelect.value = result.client._id;
+                
+                // Hide the add client form and clear inputs
+                cancelAddClient();
+                
+                showAlert('Client added successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error creating client:', error);
+                alert(`Failed to create client: ${error.message}`);
+            }
         }
 
         // Delete order function (owners only)
@@ -1347,9 +1710,75 @@ Check console for detailed information.
             const paymentStatus = document.getElementById('paymentStatus').value;
             const description = document.getElementById('description').value.trim();
             
-            if (!clientId || !orderDate || !orderName || !venuePlace || !totalAmount || !description) {
+            if (!clientId || !orderDate || !orderName || !venuePlace || !totalAmount) {
                 alert('Please fill in all required fields');
                 return;
+            }
+            
+            // Collect products data
+            const productRows = document.querySelectorAll('.product-row');
+            const products = [];
+            
+            for (const row of productRows) {
+                const productTypeSelect = row.querySelector('select[name="productType"]');
+                const priceInput = row.querySelector('input[name="productPrice"]');
+                
+                if (!productTypeSelect.value || !priceInput.value) {
+                    alert('Please complete all product information or remove incomplete entries');
+                    return;
+                }
+                
+                const productType = productTypeSelect.value;
+                const price = parseFloat(priceInput.value);
+                let quantity = 1;
+                let sizeInfo = '';
+                
+                // Check if it's LED or LED Flooring (size-based)
+                if (productType === 'LED' || productType === 'LED Flooring') {
+                    const sizeInput = row.querySelector('input[name="productSize"]');
+                    
+                    if (!sizeInput.value) {
+                        alert(`Please enter size (in feet) for ${productType}`);
+                        return;
+                    }
+                    
+                    const size = parseFloat(sizeInput.value);
+                    quantity = size;
+                    sizeInfo = `${size} feet`;
+                } else {
+                    const quantityInput = row.querySelector('input[name="productQuantity"]');
+                    if (!quantityInput.value) {
+                        alert(`Please enter quantity for ${productType}`);
+                        return;
+                    }
+                    quantity = parseFloat(quantityInput.value);
+                }
+                
+                products.push({
+                    name: productType,
+                    quantity: quantity,
+                    price: price,
+                    sizeInfo: sizeInfo // Store size info for LED/LED Flooring
+                });
+            }
+            
+            // Validate that at least one product is added
+            if (products.length === 0) {
+                alert('Please add at least one product to the order');
+                return;
+            }
+            
+            // Validate partial payment amount if partial is selected
+            if (paymentStatus === 'partial') {
+                const receivedPaymentAmount = document.getElementById('receivedPaymentAmount').value;
+                if (!receivedPaymentAmount || parseFloat(receivedPaymentAmount) <= 0) {
+                    alert('Please enter the payment amount received for partial payment');
+                    return;
+                }
+                if (parseFloat(receivedPaymentAmount) >= parseFloat(totalAmount)) {
+                    alert('Partial payment amount should be less than total amount. Please select "Completed" if full payment is received.');
+                    return;
+                }
             }
             
             // Collect workers data
@@ -1442,7 +1871,10 @@ Check console for detailed information.
                 if (paymentStatus === 'completed') {
                     receivedPayment = parseInt(totalAmount);
                 } else if (paymentStatus === 'partial') {
-                    receivedPayment = Math.round(parseInt(totalAmount) * 0.5);
+                    const receivedPaymentAmount = document.getElementById('receivedPaymentAmount').value;
+                    receivedPayment = parseInt(receivedPaymentAmount);
+                } else {
+                    receivedPayment = 0; // Pending
                 }
                 
                 // Create new order object matching the API expectations
@@ -1450,17 +1882,13 @@ Check console for detailed information.
                     clientId: clientId,
                     orderName: orderName,
                     venuePlace: venuePlace,
-                    products: [{
-                        name: orderName,
-                        quantity: 1,
-                        price: parseInt(totalAmount)
-                    }],
+                    products: products, // Use the collected products array
                     totalAmount: parseInt(totalAmount),
                     receivedPayment: receivedPayment,
                     orderDate: orderDate,
                     workers: workers,
                     transporters: transporters,
-                    description: description,
+                    description: description || '',
                     shopName: userData.shopName || 'Test Shop',
                     createdBy: createdById
                 };
@@ -1497,8 +1925,13 @@ Check console for detailed information.
                 form.reset();
                 document.getElementById('workersContainer').innerHTML = '';
                 document.getElementById('transportersContainer').innerHTML = '';
+                document.getElementById('productsContainer').innerHTML = '';
                 workerCounter = 0;
                 transporterCounter = 0;
+                productCounter = 0;
+                document.getElementById('calculatedTotal').textContent = '₹0';
+                document.getElementById('partialPaymentRow').style.display = 'none';
+                document.getElementById('receivedPaymentAmount').required = false;
                 setTodayDate();
                 
                 alert(`Order created successfully!\nTotal Amount: ₹${parseInt(totalAmount).toLocaleString()}\nWorker Costs: ₹${totalWorkerSalary.toLocaleString()}\nTransport Costs: ₹${totalTransporterFee.toLocaleString()}\nNet Profit: ₹${(parseInt(totalAmount) - totalWorkerSalary - totalTransporterFee).toLocaleString()}`);

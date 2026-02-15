@@ -309,8 +309,8 @@ router.post('/sync', async (req, res) => {
               relatedOrder: order._id,
               description: `Order work: ${order.orderName || 'Order #' + order._id.toString().slice(-6)}`,
               workDate: order.orderDate || order.createdAt,
-              isPaid: order.status === 'completed',
-              paidDate: order.status === 'completed' ? order.completionDate || new Date() : null
+              isPaid: false, // Always create as unpaid - owner will pay manually
+              paidDate: null
             });
 
             await salaryEntry.save();
@@ -337,8 +337,8 @@ router.post('/sync', async (req, res) => {
               relatedOrder: order._id,
               description: `Transport work: ${order.orderName || 'Order #' + order._id.toString().slice(-6)}`,
               workDate: order.orderDate || order.createdAt,
-              isPaid: order.status === 'completed',
-              paidDate: order.status === 'completed' ? order.completionDate || new Date() : null
+              isPaid: false, // Always create as unpaid - owner will pay manually
+              paidDate: null
             });
 
             await salaryEntry.save();
@@ -366,8 +366,8 @@ router.post('/sync', async (req, res) => {
             relatedProject: project._id,
             description: `Editing project: ${project.projectName}`,
             workDate: project.startDate || project.createdAt,
-            isPaid: project.status === 'completed',
-            paidDate: project.status === 'completed' ? project.completionDate || new Date() : null
+            isPaid: false, // Always create as unpaid - owner will pay manually
+            paidDate: null
           });
 
           await salaryEntry.save();

@@ -477,6 +477,12 @@
                     <span>Workers & Editors</span>
                 </a>
             </div>
+            <div class="nav-item">
+                <a href="calendar.html" class="nav-link">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendar</span>
+                </a>
+            </div>
         </nav>
     </div>
     
@@ -554,21 +560,9 @@
                 </div>
                 <div class="modal-body">
                     <form id="createClientForm">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Client Name *</label>
-                                <input type="text" class="form-control" id="clientName" placeholder="Full name or company name" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Client Type *</label>
-                                <select class="form-select" id="clientType" required>
-                                    <option value="">Select Type</option>
-                                    <option value="individual">Individual</option>
-                                    <option value="company">Company</option>
-                                    <option value="wedding">Wedding</option>
-                                    <option value="event">Event Organizer</option>
-                                </select>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Client Name *</label>
+                            <input type="text" class="form-control" id="clientName" placeholder="Full name or company name" required>
                         </div>
                         
                         <div class="row">
@@ -579,33 +573,6 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Phone Number *</label>
                                 <input type="tel" class="form-control" id="clientPhone" placeholder="+91 9876543210" required>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Address</label>
-                            <textarea class="form-control" id="clientAddress" rows="2" placeholder="Complete address"></textarea>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Business Category</label>
-                                <select class="form-select" id="businessCategory">
-                                    <option value="">Select Category</option>
-                                    <option value="video_editing">Video Editing</option>
-                                    <option value="led_walls">LED Walls</option>
-                                    <option value="drones">Drones</option>
-                                    <option value="cameras">Cameras</option>
-                                    <option value="mixed">Mixed Services</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Priority Level</label>
-                                <select class="form-select" id="priorityLevel">
-                                    <option value="normal">Normal</option>
-                                    <option value="high">High</option>
-                                    <option value="vip">VIP</option>
-                                </select>
                             </div>
                         </div>
                         
@@ -803,11 +770,8 @@
                 client.orderHistory[client.orderHistory.length - 1].date : 
                 client.createdAt;
             
-            // Use actual client data
-            const clientType = client.clientType || 'individual';
-            const priority = client.priorityLevel || 'normal';
-            const businessCategory = client.businessCategory || 'mixed';
-
+            // Use actual client data (removed clientType, priority, businessCategory)
+            
             // Check if user is owner to show edit button
             const userData = JSON.parse(localStorage.getItem('user'));
             const isOwner = userData && userData.role && userData.role.toLowerCase() === 'owner';
@@ -816,12 +780,10 @@
             let editPaymentButton = '';
             if (isOwner) {
                 editPaymentButton = `
-                    <div class="client-actions mt-3">
-                        <div class="d-flex justify-content-end gap-2">
-                            <button class="btn btn-sm btn-outline-primary" onclick="editClientPayment('${client._id}', '${client.name}', ${totalDue}, ${receivedAmount})" title="Edit Payment Received">
-                                <i class="fas fa-edit"></i> Edit Payment
-                            </button>
-                        </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-primary w-100" onclick="editClientPayment('${client._id}', '${client.name}', ${totalDue}, ${receivedAmount})">
+                            <i class="fas fa-edit me-2"></i>Update Payment Info
+                        </button>
                     </div>
                 `;
             }
@@ -833,8 +795,7 @@
                         <div>
                             <div class="client-name">${client.name}</div>
                             <div style="color: #64748b; font-size: 0.875rem;">
-                                <i class="fas fa-tag me-1"></i>${clientType.charAt(0).toUpperCase() + clientType.slice(1)}
-                                ${priority !== 'normal' ? `<span class="badge bg-warning ms-2">${priority.toUpperCase()}</span>` : ''}
+                                <i class="fas fa-user me-1"></i>Client
                             </div>
                         </div>
                     </div>
@@ -842,22 +803,18 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <strong>Contact:</strong><br>
                         <span style="color: #64748b; font-size: 0.875rem;">
                             <i class="fas fa-phone me-1"></i>${client.phone}<br>
                             <i class="fas fa-envelope me-1"></i>${client.email || 'No email'}
                         </span>
                     </div>
-                    <div class="col-md-3">
-                        <strong>Business:</strong><br>
-                        <span style="color: #64748b;">${businessCategory.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
-                    </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <strong>Last Activity:</strong><br>
                         <span style="color: #64748b;">${lastOrderDate ? new Date(lastOrderDate).toLocaleDateString() : 'No activity'}</span>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <strong>Payment Status:</strong><br>
                         <span style="color: #64748b;">
                             <span class="payment-indicator ${paymentClass}"></span>
@@ -867,28 +824,51 @@
                 </div>
                 
                 <div class="lifetime-stats">
-                    <div style="font-weight: 600; margin-bottom: 8px; color: #1e293b;">Lifetime Statistics & Payments</div>
+                    <div style="font-weight: 600; margin-bottom: 12px; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                        <i class="fas fa-chart-line me-2"></i>Lifetime Statistics
+                    </div>
                     <div class="stat-item">
-                        <span>Total Orders:</span>
+                        <span><i class="fas fa-box me-2" style="color: #3b82f6;"></i>Total Orders:</span>
                         <span style="font-weight: 600;">${lifetimeOrders}</span>
                     </div>
                     <div class="stat-item">
-                        <span>Total Projects:</span>
+                        <span><i class="fas fa-video me-2" style="color: #8b5cf6;"></i>Total Projects:</span>
                         <span style="font-weight: 600;">${lifetimeProjects}</span>
                     </div>
-                    <div class="stat-item">
-                        <span>Total Value:</span>
-                        <span style="font-weight: 600; color: #10b981;">₹${lifetimeValue.toLocaleString()}</span>
+                    <div style="margin: 12px 0; border-top: 1px solid #e2e8f0;"></div>
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #1e293b;">
+                        <i class="fas fa-rupee-sign me-2"></i>Payment Information
                     </div>
                     <div class="stat-item">
-                        <span>Money Received:</span>
+                        <span>Total Amount:</span>
+                        <span style="font-weight: 600; color: #3b82f6;">₹${lifetimeValue.toLocaleString()}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Received:</span>
                         <span style="font-weight: 600; color: #10b981;">₹${receivedAmount.toLocaleString()}</span>
                     </div>
-                    <div class="stat-item">
-                        <span>Pending Amount:</span>
-                        <span style="font-weight: 600; color: ${pendingAmount > 0 ? '#ef4444' : '#10b981'};">₹${pendingAmount.toLocaleString()}</span>
+                    <div class="stat-item" style="padding-top: 8px; border-top: 1px dashed #e2e8f0; margin-top: 4px;">
+                        <span style="font-weight: 600;">Pending:</span>
+                        <span style="font-weight: 700; font-size: 1.1rem; color: ${pendingAmount > 0 ? '#ef4444' : '#10b981'};">₹${pendingAmount.toLocaleString()}</span>
                     </div>
+                    ${pendingAmount > 0 ? `
+                    <div class="mt-2 p-2" style="background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 4px;">
+                        <small style="color: #991b1b;">
+                            <i class="fas fa-exclamation-circle me-1"></i>
+                            Payment pending from client
+                        </small>
+                    </div>
+                    ` : `
+                    <div class="mt-2 p-2" style="background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 4px;">
+                        <small style="color: #166534;">
+                            <i class="fas fa-check-circle me-1"></i>
+                            All payments cleared
+                        </small>
+                    </div>
+                    `}
                 </div>
+                
+                ${editPaymentButton}
                 
                 ${client.address ? `
                 <div class="mt-2">
@@ -903,8 +883,6 @@
                     <span style="color: #64748b; font-size: 0.875rem;">${client.notes}</span>
                 </div>
                 ` : ''}
-                
-                ${editPaymentButton}
             `;
             
             return card;
@@ -916,12 +894,11 @@
             
             // Basic validation
             const clientName = document.getElementById('clientName').value.trim();
-            const clientType = document.getElementById('clientType').value;
             const clientPhone = document.getElementById('clientPhone').value.trim();
             const clientEmail = document.getElementById('clientEmail').value.trim();
             
-            if (!clientName || !clientType || !clientPhone) {
-                showAlert('Please fill in all required fields', 'warning');
+            if (!clientName || !clientPhone) {
+                showAlert('Please fill in all required fields (Name and Phone)', 'warning');
                 return;
             }
             
@@ -942,12 +919,8 @@
                     name: clientName,
                     email: clientEmail || '', // Allow empty email
                     phone: clientPhone,
-                    address: document.getElementById('clientAddress').value.trim(),
+                    address: '', // Empty address (field removed from form)
                     shopName: userData.shopName, // Associate client with current user's shop
-                    // Additional fields for future use
-                    clientType: clientType,
-                    businessCategory: document.getElementById('businessCategory').value,
-                    priorityLevel: document.getElementById('priorityLevel').value,
                     notes: document.getElementById('clientNotes').value.trim()
                 };
                 
@@ -993,20 +966,1113 @@
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
         }
-
-        // Edit client payment function (owners only)
+        
+        // Edit client payment function
         async function editClientPayment(clientId, clientName, totalDue, currentReceived) {
             try {
-                // Fetch client work history
-                const response = await fetch(`/api/clients/${clientId}/work-history`);
+                // Fetch client orders and projects
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: 'owner',
+                    userId: userData._id || userData.id
+                });
+                
+                // Fetch orders
+                const ordersResponse = await fetch(`/api/orders?${params}`);
+                const ordersData = await ordersResponse.json();
+                
+                // Fetch editing projects
+                const projectsResponse = await fetch(`/api/editing?${params}`);
+                const projectsData = await projectsResponse.json();
+                
+                // Filter orders for this client
+                const clientOrders = ordersData.data.filter(order => {
+                    if (order.client && typeof order.client === 'object') {
+                        return order.client._id === clientId;
+                    }
+                    return order.client === clientId;
+                });
+                
+                // Filter projects for this client
+                const clientProjects = projectsData.data.filter(project => {
+                    if (project.client && typeof project.client === 'object') {
+                        return project.client._id === clientId;
+                    }
+                    return project.client === clientId;
+                });
+                
+                console.log('Client orders:', clientOrders);
+                console.log('Client projects:', clientProjects);
+                
+                // Create orders HTML
+                let ordersHTML = '';
+                if (clientOrders && clientOrders.length > 0) {
+                    ordersHTML = clientOrders.map(order => {
+                        const orderDate = new Date(order.orderDate || order.createdAt).toLocaleDateString();
+                        const statusClass = order.status === 'completed' ? 'success' : order.status === 'in_progress' ? 'warning' : 'secondary';
+                        const paymentPercent = order.totalAmount > 0 ? Math.round((order.receivedPayment / order.totalAmount) * 100) : 0;
+                        
+                        // Products list
+                        let productsHTML = '';
+                        if (order.products && order.products.length > 0) {
+                            productsHTML = order.products.map(product => {
+                                const quantityDisplay = product.sizeInfo || `Qty: ${product.quantity}`;
+                                const lineTotal = product.price * product.quantity;
+                                return `
+                                    <tr style="font-size: 0.85rem;">
+                                        <td style="padding: 4px 8px;">${product.name}</td>
+                                        <td style="padding: 4px 8px; text-align: center;">${quantityDisplay}</td>
+                                        <td style="padding: 4px 8px; text-align: right;">₹${product.price.toLocaleString()}</td>
+                                        <td style="padding: 4px 8px; text-align: right;">₹${lineTotal.toLocaleString()}</td>
+                                    </tr>
+                                `;
+                            }).join('');
+                        }
+                        
+                        return `
+                            <div class="order-item mb-3 p-3" style="border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-primary me-2">ORDER</span>
+                                        <strong style="color: #1e293b;">${order.orderName || 'Order'}</strong>
+                                        <div class="text-muted small">
+                                            <i class="fas fa-calendar me-1"></i>${orderDate}
+                                            <span class="badge bg-${statusClass} ms-2">${order.status.replace('_', ' ').toUpperCase()}</span>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <i class="fas fa-map-marker-alt me-1"></i>${order.venuePlace || 'No venue'}
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-success" onclick="generateReceipt('${order._id}', '${clientName}')">
+                                        <i class="fas fa-receipt me-1"></i>Receipt
+                                    </button>
+                                </div>
+                                
+                                <!-- Products Table -->
+                                ${productsHTML ? `
+                                <div class="mb-2">
+                                    <table class="table table-sm mb-0" style="font-size: 0.875rem;">
+                                        <thead style="background: #f8fafc;">
+                                            <tr>
+                                                <th style="border: none; padding: 6px 8px;">Product</th>
+                                                <th style="border: none; padding: 6px 8px; text-align: center;">Qty/Size</th>
+                                                <th style="border: none; padding: 6px 8px; text-align: right;">Unit Price</th>
+                                                <th style="border: none; padding: 6px 8px; text-align: right;">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${productsHTML}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                ` : ''}
+                                
+                                <!-- Payment Info -->
+                                <div class="row mt-2">
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Total Amount:</small><br>
+                                        <strong style="color: #3b82f6;">₹${order.totalAmount.toLocaleString()}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Received:</small><br>
+                                        <strong style="color: #10b981;">₹${order.receivedPayment.toLocaleString()}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Pending:</small><br>
+                                        <strong style="color: ${order.remainingPayment > 0 ? '#ef4444' : '#10b981'};">₹${order.remainingPayment.toLocaleString()}</strong>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment Progress Bar -->
+                                <div class="mt-2">
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                             style="width: ${paymentPercent}%" 
+                                             aria-valuenow="${paymentPercent}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted">${paymentPercent}% paid</small>
+                                </div>
+                                
+                                <!-- Update Payment -->
+                                <div class="mt-3">
+                                    <div class="row align-items-end mb-2">
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Payment Amount *</label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" class="form-control" id="payment_amount_${order._id}" 
+                                                       placeholder="Enter amount" min="0" max="${order.remainingPayment}" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Payment Date *</label>
+                                            <input type="date" class="form-control form-control-sm" id="payment_date_${order._id}" 
+                                                   value="${new Date().toISOString().split('T')[0]}">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Method *</label>
+                                            <select class="form-select form-select-sm" id="payment_method_${order._id}">
+                                                <option value="cash">Cash</option>
+                                                <option value="bank_transfer">Bank Transfer</option>
+                                                <option value="upi">UPI</option>
+                                                <option value="cheque">Cheque</option>
+                                                <option value="card">Card</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Received By *</label>
+                                            <select class="form-select form-select-sm" id="payment_receiver_${order._id}">
+                                                <option value="">Loading...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button class="btn btn-primary btn-sm w-100" 
+                                                    onclick="addPaymentRecord('${order._id}', '${clientId}', ${order.totalAmount})">
+                                                <i class="fas fa-plus me-1"></i>Add Payment
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-10">
+                                            <input type="text" class="form-control form-control-sm" id="payment_notes_${order._id}" 
+                                                   placeholder="Payment notes (optional)">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment History -->
+                                <div class="mt-3" id="payment_history_${order._id}">
+                                    <small class="text-muted">Loading payment history...</small>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    // Load workers/editors/transporters for "Received By" dropdowns after modal is shown
+                    setTimeout(() => {
+                        loadPaymentReceivers();
+                        clientOrders.forEach(order => {
+                            loadPaymentHistory(order._id);
+                        });
+                        clientProjects.forEach(project => {
+                            loadPaymentHistory(project._id);
+                        });
+                    }, 100);
+                } else {
+                    ordersHTML = '';
+                }
+                
+                // Create projects HTML
+                let projectsHTML = '';
+                if (clientProjects && clientProjects.length > 0) {
+                    projectsHTML = clientProjects.map(project => {
+                        const projectDate = new Date(project.startDate || project.createdAt).toLocaleDateString();
+                        const endDate = new Date(project.endDate).toLocaleDateString();
+                        const statusClass = project.status === 'completed' ? 'success' : project.status === 'in_progress' ? 'warning' : 'secondary';
+                        const paymentPercent = project.totalAmount > 0 ? Math.round((project.receivedPayment / project.totalAmount) * 100) : 0;
+                        const editorName = project.editor ? `${project.editor.firstName} ${project.editor.lastName}` : 'Unknown';
+                        
+                        // Project details table
+                        let detailsHTML = `
+                            <table class="table table-sm mb-0" style="font-size: 0.875rem;">
+                                <tbody>
+                                    <tr style="font-size: 0.85rem;">
+                                        <td style="padding: 4px 8px; width: 30%;"><strong>Editing Value:</strong></td>
+                                        <td style="padding: 4px 8px; text-align: right;">₹${(project.editingValue || 0).toLocaleString()}</td>
+                                    </tr>
+                                    ${project.pendriveIncluded ? `
+                                    <tr style="font-size: 0.85rem;">
+                                        <td style="padding: 4px 8px;"><strong>Pendrive:</strong></td>
+                                        <td style="padding: 4px 8px; text-align: right;">₹${(project.pendriveValue || 0).toLocaleString()}</td>
+                                    </tr>
+                                    ` : ''}
+                                    <tr style="font-size: 0.85rem; background: #f8fafc;">
+                                        <td style="padding: 4px 8px;"><strong>Total:</strong></td>
+                                        <td style="padding: 4px 8px; text-align: right;"><strong>₹${project.totalAmount.toLocaleString()}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        `;
+                        
+                        return `
+                            <div class="order-item mb-3 p-3" style="border: 1px solid #8b5cf6; border-radius: 8px; background: white;">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-purple me-2" style="background: #8b5cf6;">PROJECT</span>
+                                        <strong style="color: #1e293b;">${project.projectName || 'Editing Project'}</strong>
+                                        <div class="text-muted small">
+                                            <i class="fas fa-calendar me-1"></i>${projectDate} - ${endDate}
+                                            <span class="badge bg-${statusClass} ms-2">${project.status.replace('_', ' ').toUpperCase()}</span>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <i class="fas fa-user-edit me-1"></i>Editor: ${editorName}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Project Details -->
+                                <div class="mb-2">
+                                    ${detailsHTML}
+                                </div>
+                                
+                                <!-- Payment Info -->
+                                <div class="row mt-2">
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Total Amount:</small><br>
+                                        <strong style="color: #3b82f6;">₹${project.totalAmount.toLocaleString()}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Received:</small><br>
+                                        <strong style="color: #10b981;">₹${project.receivedPayment.toLocaleString()}</strong>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted">Pending:</small><br>
+                                        <strong style="color: ${project.remainingPayment > 0 ? '#ef4444' : '#10b981'};">₹${project.remainingPayment.toLocaleString()}</strong>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment Progress Bar -->
+                                <div class="mt-2">
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" role="progressbar" 
+                                             style="width: ${paymentPercent}%" 
+                                             aria-valuenow="${paymentPercent}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <small class="text-muted">${paymentPercent}% paid</small>
+                                </div>
+                                
+                                <!-- Update Payment -->
+                                <div class="mt-3">
+                                    <div class="row align-items-end mb-2">
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Payment Amount *</label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">₹</span>
+                                                <input type="number" class="form-control" id="payment_amount_${project._id}" 
+                                                       placeholder="Enter amount" min="0" max="${project.remainingPayment}" step="0.01">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Payment Date *</label>
+                                            <input type="date" class="form-control form-control-sm" id="payment_date_${project._id}" 
+                                                   value="${new Date().toISOString().split('T')[0]}">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small">Method *</label>
+                                            <select class="form-select form-select-sm" id="payment_method_${project._id}">
+                                                <option value="cash">Cash</option>
+                                                <option value="bank_transfer">Bank Transfer</option>
+                                                <option value="upi">UPI</option>
+                                                <option value="cheque">Cheque</option>
+                                                <option value="card">Card</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label small">Received By *</label>
+                                            <select class="form-select form-select-sm" id="payment_receiver_${project._id}">
+                                                <option value="">Loading...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button class="btn btn-primary btn-sm w-100" 
+                                                    onclick="addPaymentRecord('${project._id}', '${clientId}', ${project.totalAmount})">
+                                                <i class="fas fa-plus me-1"></i>Add Payment
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-10">
+                                            <input type="text" class="form-control form-control-sm" id="payment_notes_${project._id}" 
+                                                   placeholder="Payment notes (optional)">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment History -->
+                                <div class="mt-3" id="payment_history_${project._id}">
+                                    <small class="text-muted">Loading payment history...</small>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    projectsHTML = '';
+                }
+                
+                // Combine orders and projects
+                const allItemsHTML = ordersHTML + projectsHTML;
+                
+                const finalHTML = allItemsHTML || `
+                    <div class="text-center p-4" style="color: #64748b;">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No orders or projects found for this client.</p>
+                    </div>
+                `;
+                
+                const modalHTML = `
+                    <div class="modal fade" id="editPaymentModal" tabindex="-1">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-file-invoice-dollar me-2"></i>Payment Management - ${clientName}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <!-- Payment Summary -->
+                                    <div class="mb-4 p-3" style="background: #f8fafc; border-radius: 8px;">
+                                        <h6 class="mb-3"><i class="fas fa-chart-pie me-2"></i>Payment Summary</h6>
+                                        <div class="row">
+                                            <div class="col-md-4 text-center">
+                                                <div class="h4 mb-1" style="color: #3b82f6;">₹${totalDue.toLocaleString()}</div>
+                                                <small class="text-muted">Total Amount</small>
+                                            </div>
+                                            <div class="col-md-4 text-center">
+                                                <div class="h4 mb-1" style="color: #10b981;">₹${currentReceived.toLocaleString()}</div>
+                                                <small class="text-muted">Received</small>
+                                            </div>
+                                            <div class="col-md-4 text-center">
+                                                <div class="h4 mb-1" style="color: #ef4444;">₹${(totalDue - currentReceived).toLocaleString()}</div>
+                                                <small class="text-muted">Pending</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Orders & Projects List -->
+                                    <div class="mb-3">
+                                        <h6><i class="fas fa-list me-2"></i>Orders & Projects</h6>
+                                        <div style="max-height: 500px; overflow-y: auto;">
+                                            ${finalHTML}
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="paymentUpdateResult"></div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal if any
+                const existingModal = document.getElementById('editPaymentModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // Add modal to body
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('editPaymentModal'));
+                modal.show();
+                
+            } catch (error) {
+                console.error('Error loading client orders:', error);
+                showAlert('Error loading client orders', 'danger');
+            }
+        }
+        
+        // Update order payment
+        async function updateOrderPayment(orderId, totalAmount) {
+            const receivedAmount = parseFloat(document.getElementById(`payment_${orderId}`).value) || 0;
+            
+            if (receivedAmount < 0) {
+                showAlert('Amount cannot be negative', 'warning');
+                return;
+            }
+            
+            if (receivedAmount > totalAmount) {
+                showAlert('Received amount cannot exceed total amount', 'warning');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/orders/${orderId}/payment`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ receivedPayment: receivedAmount })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Payment updated successfully!', 'success');
+                    // Refresh the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editPaymentModal'));
+                    modal.hide();
+                    loadClients();
+                } else {
+                    showAlert(`Error: ${result.message}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error updating payment:', error);
+                showAlert('Network error while updating payment', 'danger');
+            }
+        }
+        
+        // Load payment receivers (workers, editors, transporters, owners)
+        async function loadPaymentReceivers() {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: 'owner', // Request as owner to get all users including owners
+                    userId: userData._id || userData.id
+                });
+                
+                const response = await fetch(`/api/users?${params}`);
                 const data = await response.json();
                 
-                if (!response.ok) {
-                    showAlert(`Error loading work history: ${data.message}`, 'error');
+                console.log('Users API response:', data);
+                
+                if (response.ok && data.data) {
+                    // Filter for workers, editors, transporters, and owners
+                    const receivers = data.data.filter(user => {
+                        const role = user.role.toLowerCase();
+                        return role.includes('worker') || 
+                               role.includes('editor') || 
+                               role.includes('transporter') ||
+                               role === 'owner';
+                    });
+                    
+                    console.log('Payment receivers loaded:', receivers.length);
+                    console.log('Receivers:', receivers.map(r => `${r.firstName} ${r.lastName} (${r.role})`));
+                    
+                    // Update all receiver dropdowns
+                    document.querySelectorAll('[id^="payment_receiver_"]').forEach(select => {
+                        select.innerHTML = '<option value="">Select Person</option>' + 
+                            receivers.map(receiver => {
+                                const displayRole = receiver.role.charAt(0).toUpperCase() + receiver.role.slice(1);
+                                return `<option value="${receiver._id}">${receiver.firstName} ${receiver.lastName} (${displayRole})</option>`;
+                            }).join('');
+                        
+                        // Set current user as default
+                        const currentUserId = userData._id || userData.id;
+                        if (currentUserId) {
+                            select.value = currentUserId;
+                        }
+                    });
+                    
+                    console.log('Payment receiver dropdowns updated');
+                } else {
+                    console.error('Failed to load users:', data);
+                }
+            } catch (error) {
+                console.error('Error loading payment receivers:', error);
+            }
+        }
+        
+        // Load payment history for an order
+        async function loadPaymentHistory(orderId) {
+            try {
+                const response = await fetch(`/api/payments/order/${orderId}`);
+                const data = await response.json();
+                
+                const historyDiv = document.getElementById(`payment_history_${orderId}`);
+                
+                if (response.ok && data.data && data.data.length > 0) {
+                    const paymentsHTML = data.data.map(payment => {
+                        const paymentDate = new Date(payment.paymentDate).toLocaleDateString();
+                        const paymentTime = new Date(payment.paymentDate).toLocaleTimeString();
+                        const receiverName = payment.receivedBy ? 
+                            `${payment.receivedBy.firstName} ${payment.receivedBy.lastName}` : 
+                            'Unknown';
+                        const receiverRole = payment.receivedBy ? 
+                            payment.receivedBy.role.charAt(0).toUpperCase() + payment.receivedBy.role.slice(1) : 
+                            '';
+                        const paymentMethod = payment.paymentMethod || 'cash';
+                        
+                        return `
+                            <div class="p-2 mb-2" style="background: #f8fafc; border-left: 3px solid #10b981; border-radius: 4px;">
+                                <div class="row align-items-center" style="font-size: 0.875rem;">
+                                    <div class="col-md-3">
+                                        <strong style="color: #10b981; font-size: 1rem;">₹${payment.amount.toLocaleString()}</strong>
+                                        <div class="text-muted small"><i class="fas fa-calendar me-1"></i>${paymentDate}</div>
+                                        <div class="text-muted small"><i class="fas fa-clock me-1"></i>${paymentTime}</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-muted small">Payment Method:</div>
+                                        <span class="badge bg-info">${paymentMethod.replace('_', ' ').toUpperCase()}</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="text-muted small">Received By:</div>
+                                        <strong><i class="fas fa-user me-1"></i>${receiverName}</strong>
+                                        <div class="text-muted small">${receiverRole}</div>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="deletePayment('${payment._id}', '${orderId}')" title="Delete Payment">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                ${payment.notes ? `
+                                <div class="mt-2 text-muted small">
+                                    <i class="fas fa-sticky-note me-1"></i><strong>Notes:</strong> ${payment.notes}
+                                </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    const totalReceived = data.data.reduce((sum, p) => sum + p.amount, 0);
+                    
+                    historyDiv.innerHTML = `
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted"><strong><i class="fas fa-history me-1"></i>Payment History (${data.data.length} payments):</strong></small>
+                                <small class="text-muted">Total: <strong style="color: #10b981;">₹${totalReceived.toLocaleString()}</strong></small>
+                            </div>
+                            ${paymentsHTML}
+                        </div>
+                    `;
+                } else {
+                    historyDiv.innerHTML = '<small class="text-muted"><i class="fas fa-info-circle me-1"></i>No payment history yet</small>';
+                }
+            } catch (error) {
+                console.error('Error loading payment history:', error);
+                document.getElementById(`payment_history_${orderId}`).innerHTML = 
+                    '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Error loading payment history</small>';
+            }
+        }
+        
+        // Delete payment record
+        async function deletePayment(paymentId, orderId) {
+            if (!confirm('Are you sure you want to delete this payment record? This will update the order payment totals.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/payments/${paymentId}`, {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Payment deleted successfully', 'success');
+                    // Reload payment history
+                    loadPaymentHistory(orderId);
+                    // Refresh clients list
+                    setTimeout(() => {
+                        loadClients();
+                    }, 1000);
+                } else {
+                    showAlert(`Error: ${result.message}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error deleting payment:', error);
+                showAlert('Network error while deleting payment', 'danger');
+            }
+        }
+        
+        // Add payment record
+        async function addPaymentRecord(orderId, clientId, totalAmount) {
+            const amount = parseFloat(document.getElementById(`payment_amount_${orderId}`).value) || 0;
+            const paymentDate = document.getElementById(`payment_date_${orderId}`).value;
+            const paymentMethod = document.getElementById(`payment_method_${orderId}`).value;
+            const receivedBy = document.getElementById(`payment_receiver_${orderId}`).value;
+            const notes = document.getElementById(`payment_notes_${orderId}`).value.trim();
+            
+            // Validation
+            if (amount <= 0) {
+                showAlert('Please enter a valid payment amount', 'warning');
+                return;
+            }
+            
+            if (!paymentDate) {
+                showAlert('Please select payment date', 'warning');
+                return;
+            }
+            
+            if (!receivedBy) {
+                showAlert('Please select who received the payment', 'warning');
+                return;
+            }
+            
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                
+                const paymentData = {
+                    orderId: orderId,
+                    clientId: clientId,
+                    amount: amount,
+                    paymentDate: paymentDate,
+                    paymentMethod: paymentMethod,
+                    receivedBy: receivedBy,
+                    notes: notes,
+                    shopName: userData.shopName
+                };
+                
+                const response = await fetch('/api/payments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Payment recorded successfully!', 'success');
+                    
+                    // Clear form
+                    document.getElementById(`payment_amount_${orderId}`).value = '';
+                    document.getElementById(`payment_date_${orderId}`).value = new Date().toISOString().split('T')[0];
+                    document.getElementById(`payment_notes_${orderId}`).value = '';
+                    
+                    // Reload payment history
+                    loadPaymentHistory(orderId);
+                    
+                    // Refresh clients list
+                    setTimeout(() => {
+                        loadClients();
+                    }, 1000);
+                } else {
+                    showAlert(`Error: ${result.message}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error adding payment record:', error);
+                showAlert('Network error while adding payment', 'danger');
+            }
+        }
+        
+        // Generate receipt
+        async function generateReceipt(orderId, clientName) {
+            try {
+                const userData = JSON.parse(localStorage.getItem('user'));
+                const params = new URLSearchParams({
+                    shopName: userData.shopName,
+                    userRole: 'owner',
+                    userId: userData._id || userData.id
+                });
+                
+                const response = await fetch(`/api/orders?${params}`);
+                const data = await response.json();
+                
+                const order = data.data.find(o => o._id === orderId);
+                if (!order) {
+                    showAlert('Order not found', 'danger');
                     return;
                 }
                 
-                const { client, workHistory } = data;
+                // Generate receipt HTML
+                const receiptHTML = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Receipt - ${order.orderName}</title>
+                        <style>
+                            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                            
+                            body { 
+                                font-family: 'Inter', Arial, sans-serif; 
+                                padding: 40px; 
+                                max-width: 800px; 
+                                margin: 0 auto; 
+                                background: white;
+                                color: #000;
+                            }
+                            
+                            .header { 
+                                text-align: center; 
+                                border-bottom: 3px solid #000;
+                                padding-bottom: 25px;
+                                margin-bottom: 30px;
+                            }
+                            
+                            .header h1 { 
+                                margin: 0 0 10px 0; 
+                                font-size: 2rem;
+                                font-weight: 700;
+                                text-transform: uppercase;
+                                letter-spacing: 3px;
+                                color: #000;
+                            }
+                            
+                            .header .subtitle {
+                                font-size: 0.9rem;
+                                color: #666;
+                                text-transform: uppercase;
+                                letter-spacing: 2px;
+                                font-weight: 500;
+                            }
+                            
+                            .receipt-number {
+                                text-align: right;
+                                margin-bottom: 20px;
+                                font-size: 0.9rem;
+                                color: #666;
+                            }
+                            
+                            .info { 
+                                margin-bottom: 30px;
+                                border: 1px solid #ddd;
+                                padding: 20px;
+                            }
+                            
+                            .info-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                margin-bottom: 10px;
+                                padding: 5px 0;
+                                border-bottom: 1px solid #f0f0f0;
+                            }
+                            
+                            .info-row:last-child {
+                                border-bottom: none;
+                            }
+                            
+                            .info-row strong {
+                                color: #000;
+                                font-weight: 600;
+                                min-width: 150px;
+                            }
+                            
+                            .info-row span {
+                                color: #333;
+                            }
+                            
+                            table { 
+                                width: 100%; 
+                                border-collapse: collapse; 
+                                margin: 30px 0;
+                                border: 1px solid #000;
+                            }
+                            
+                            th, td { 
+                                padding: 12px 15px; 
+                                text-align: left; 
+                                border-bottom: 1px solid #ddd; 
+                            }
+                            
+                            th { 
+                                background: #000;
+                                color: white;
+                                font-weight: 600;
+                                text-transform: uppercase;
+                                font-size: 0.85rem;
+                                letter-spacing: 1px;
+                            }
+                            
+                            tbody tr:last-child td {
+                                border-bottom: none;
+                            }
+                            
+                            .text-right { text-align: right; }
+                            
+                            .total-section { 
+                                margin-top: 30px; 
+                                border-top: 2px solid #000; 
+                                padding-top: 20px;
+                                padding: 20px;
+                                background: #f9f9f9;
+                            }
+                            
+                            .total-row { 
+                                display: flex; 
+                                justify-content: space-between; 
+                                margin-bottom: 10px; 
+                                font-size: 1rem;
+                                padding: 5px 0;
+                            }
+                            
+                            .total-row.grand { 
+                                font-size: 1.3rem; 
+                                font-weight: 700; 
+                                color: #000;
+                                border-top: 2px solid #000;
+                                padding-top: 15px;
+                                margin-top: 15px;
+                            }
+                            
+                            .footer { 
+                                margin-top: 50px; 
+                                text-align: center; 
+                                color: #666; 
+                                font-size: 0.85rem;
+                                padding-top: 20px;
+                                border-top: 1px solid #ddd;
+                            }
+                            
+                            .footer p {
+                                margin: 5px 0;
+                            }
+                            
+                            .signature-section {
+                                margin-top: 60px;
+                                display: flex;
+                                justify-content: space-between;
+                            }
+                            
+                            .signature-box {
+                                width: 45%;
+                                text-align: center;
+                            }
+                            
+                            .signature-line {
+                                border-top: 1px solid #000;
+                                margin-top: 50px;
+                                padding-top: 10px;
+                                font-size: 0.9rem;
+                                color: #666;
+                            }
+                            
+                            @media print {
+                                body { 
+                                    padding: 20px;
+                                }
+                                .no-print { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>${userData.shopName || 'Business Manager'}</h1>
+                            <div class="subtitle">Payment Receipt</div>
+                        </div>
+                        
+                        <div class="receipt-number">
+                            <strong>Receipt No:</strong> ${order._id.slice(-8).toUpperCase()} | <strong>Date:</strong> ${new Date().toLocaleDateString()}
+                        </div>
+                        
+                        <div class="info">
+                            <div class="info-row">
+                                <strong>Receipt Date:</strong>
+                                <span>${new Date().toLocaleDateString()}</span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Client Name:</strong>
+                                <span>${clientName}</span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Order Name:</strong>
+                                <span>${order.orderName || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Venue:</strong>
+                                <span>${order.venuePlace || 'N/A'}</span>
+                            </div>
+                            <div class="info-row">
+                                <strong>Order Date:</strong>
+                                <span>${new Date(order.orderDate || order.createdAt).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-right">Quantity/Size</th>
+                                    <th class="text-right">Unit Price</th>
+                                    <th class="text-right">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${order.products.map(product => {
+                                    const quantityDisplay = product.sizeInfo || product.quantity;
+                                    const lineTotal = product.price * product.quantity;
+                                    return `
+                                        <tr>
+                                            <td>${product.name}</td>
+                                            <td class="text-right">${quantityDisplay}</td>
+                                            <td class="text-right">₹${product.price.toLocaleString()}</td>
+                                            <td class="text-right">₹${lineTotal.toLocaleString()}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                        
+                        <div class="total-section">
+                            <div class="total-row">
+                                <span>Total Amount:</span>
+                                <span>₹${order.totalAmount.toLocaleString()}</span>
+                            </div>
+                            <div class="total-row" style="color: #10b981;">
+                                <span>Amount Received:</span>
+                                <span>₹${order.receivedPayment.toLocaleString()}</span>
+                            </div>
+                            <div class="total-row grand" style="color: ${order.remainingPayment > 0 ? '#ef4444' : '#10b981'};">
+                                <span>Balance Due:</span>
+                                <span>₹${order.remainingPayment.toLocaleString()}</span>
+                            </div>
+                        </div>
+                        
+                        ${order.description ? `
+                        <div style="margin-top: 20px;">
+                            <strong>Notes:</strong>
+                            <p>${order.description}</p>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="signature-section">
+                            <div class="signature-box">
+                                <div class="signature-line">Authorized Signature</div>
+                            </div>
+                            <div class="signature-box">
+                                <div class="signature-line">Client Signature</div>
+                            </div>
+                        </div>
+                        
+                        <div class="footer">
+                            <p><strong>Thank you for your business</strong></p>
+                            <p style="font-size: 0.8rem; margin-top: 10px;">This is a computer-generated receipt</p>
+                        </div>
+                        
+                        <div class="no-print" style="text-align: center; margin-top: 20px;">
+                            <button onclick="window.print()" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                Print Receipt
+                            </button>
+                            <button onclick="window.close()" style="padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+                                Close
+                            </button>
+                        </div>
+                    </body>
+                    </html>
+                `;
+                
+                // Open receipt in new window
+                const receiptWindow = window.open('', '_blank', 'width=800,height=600');
+                receiptWindow.document.write(receiptHTML);
+                receiptWindow.document.close();
+                
+            } catch (error) {
+                console.error('Error generating receipt:', error);
+                showAlert('Error generating receipt', 'danger');
+            }
+        }
+        
+        // Save client payment (old function - kept for compatibility)
+        async function saveClientPayment(clientId, totalDue) {
+            const modalHTML = `
+                <div class="modal fade" id="editPaymentModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-edit me-2"></i>Update Payment - ${clientName}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <div class="alert alert-info">
+                                        <strong>Total Amount:</strong> ₹${totalDue.toLocaleString()}<br>
+                                        <strong>Currently Received:</strong> ₹${currentReceived.toLocaleString()}<br>
+                                        <strong>Pending:</strong> ₹${(totalDue - currentReceived).toLocaleString()}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Total Amount Received *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" class="form-control" id="receivedPaymentAmount" 
+                                               value="${currentReceived}" min="0" max="${totalDue}" step="0.01">
+                                    </div>
+                                    <small class="text-muted">Enter the total amount received from this client</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Notes (Optional)</label>
+                                    <textarea class="form-control" id="paymentNotes" rows="2" 
+                                              placeholder="Add notes about this payment..."></textarea>
+                                </div>
+                                
+                                <div id="paymentUpdateResult"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary" onclick="saveClientPayment('${clientId}', ${totalDue})">
+                                    <i class="fas fa-save me-1"></i>Save Payment
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('editPaymentModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('editPaymentModal'));
+            modal.show();
+        }
+        
+        // Save client payment
+        async function saveClientPayment(clientId, totalDue) {
+            const receivedAmount = parseFloat(document.getElementById('receivedPaymentAmount').value) || 0;
+            const notes = document.getElementById('paymentNotes').value.trim();
+            const resultDiv = document.getElementById('paymentUpdateResult');
+            
+            // Validation
+            if (receivedAmount < 0) {
+                resultDiv.innerHTML = '<div class="alert alert-danger">Amount cannot be negative</div>';
+                return;
+            }
+            
+            if (receivedAmount > totalDue) {
+                resultDiv.innerHTML = '<div class="alert alert-warning">Received amount cannot exceed total amount</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/clients/${clientId}/payment`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        receivedAmount: receivedAmount,
+                        notes: notes
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<div class="alert alert-success">Payment updated successfully!</div>';
+                    
+                    // Close modal and refresh after 1 second
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editPaymentModal'));
+                        modal.hide();
+                        loadClients();
+                        showAlert('Payment information updated successfully', 'success');
+                    }, 1000);
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">Error: ${result.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Error updating payment:', error);
+                resultDiv.innerHTML = '<div class="alert alert-danger">Network error while updating payment</div>';
+            }
+        }
+
+    </script>
+    
+    <!-- Hamburger Menu JavaScript -->
+    <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburgerBtn = document.getElementById('hamburgerMenu');
                 
                 // Create work history HTML
                 let workHistoryHTML = '';
