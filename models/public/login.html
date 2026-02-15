@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#7c9cc4">
+    <title>Login - Business Management System</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #7c9cc4 0%, #8db4d6 50%, #a5c9e8 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* Prevent zoom on input focus for iOS */
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        .auth-container {
+            display: flex;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 100%;
+            max-width: 1000px;
+            min-height: 600px;
+        }
+        
+        .left-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .brand-circle {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 40px;
+        }
+        
+        .circle-bg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+        }
+        
+        .circle-bg::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            right: -50px;
+            bottom: -50px;
+            border: 1px solid #f1f5f9;
+            border-radius: 50%;
+        }
+        
+        .brand-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            z-index: 10;
+        }
+        
+        .country-flag {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .flag-1 { top: 20px; left: 50%; transform: translateX(-50%); }
+        .flag-2 { top: 50px; right: 30px; }
+        .flag-3 { bottom: 50px; right: 20px; }
+        .flag-4 { bottom: 20px; left: 50%; transform: translateX(-50%); }
+        .flag-5 { bottom: 50px; left: 20px; }
+        .flag-6 { top: 50px; left: 30px; }
+        .flag-7 { top: 50%; right: 10px; transform: translateY(-50%); }
+        .flag-8 { top: 50%; left: 10px; transform: translateY(-50%); }
+        
+        .left-content h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+        
+        .left-content p {
+            color: #64748b;
+            text-align: center;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 30px;
+        }
+        
+        .feature-dots {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #cbd5e1;
+        }
+        
+        .dot.active {
+            background: #3b82f6;
+        }
+        
+        .right-panel {
+            flex: 1;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .form-header h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .form-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .toggle-link {
+            color: #64748b;
+            text-decoration: none;
+            font-weight: 500;
+            padding-bottom: 4px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-link.active {
+            color: #1e293b;
+            border-bottom-color: #3b82f6;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #f1f5f9;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            background: #fafafa;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+        
+        .form-control:focus {
+            border-color: #3b82f6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            /* Prevent zoom on iOS */
+            font-size: 16px;
+        }
+        
+        /* Mobile-specific form improvements */
+        .mobile-device .form-control,
+        .mobile-device .country-select {
+            font-size: 16px !important; /* Prevent zoom on iOS */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .mobile-device .form-control:focus,
+        .mobile-device .country-select:focus {
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Improve touch targets on mobile */
+        .mobile-device .password-toggle {
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mobile-device .add-shop-btn {
+            min-width: 44px;
+            min-height: 44px;
+        }
+        
+
+        
+        /* Prevent text selection on buttons for mobile */
+        .btn-primary, .google-btn, .toggle-link, .password-toggle, .add-shop-btn {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .form-control::placeholder {
+            color: #94a3b8;
+        }
+        
+        .phone-group {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .country-select {
+            width: 100px;
+            padding: 16px 12px;
+            border: 2px solid #f1f5f9;
+            border-radius: 12px;
+            background: #fafafa;
+            font-size: 0.95rem;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .country-select:focus {
+            border-color: #3b82f6;
+            background: white;
+        }
+        
+        .password-group {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .password-toggle:hover {
+            color: #64748b;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+        }
+        
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex-shrink: 0; /* Prevent checkbox from shrinking */
+        }
+        
+        .custom-checkbox.checked {
+            background: #1e293b;
+            border-color: #1e293b;
+            color: white;
+        }
+        
+        .checkbox-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+        
+        .checkbox-label a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        
+        /* Mobile-specific checkbox styling */
+        @media (max-width: 768px) {
+            .checkbox-group {
+                margin: 20px 0;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .custom-checkbox {
+                width: 18px;
+                height: 18px;
+                margin-top: 2px; /* Align with first line of text */
+                min-width: 18px; /* Ensure minimum size */
+                min-height: 18px;
+            }
+            
+            .checkbox-label {
+                font-size: 0.85rem;
+                line-height: 1.3;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .custom-checkbox {
+                width: 16px;
+                height: 16px;
+                min-width: 16px;
+                min-height: 16px;
+            }
+            
+            .checkbox-label {
+                font-size: 0.8rem;
+            }
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: #eef905;
+            color: #1e293b;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 24px;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #d4e104;
+            transform: translateY(-1px);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .login-link {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .login-link a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .alert-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .shop-input-group {
+            position: relative;
+        }
+        
+        .add-shop-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: none; /* Initially hidden */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* Hide options completely when needed */
+        option[style*="display: none"] {
+            display: none !important;
+        }
+        
+        .add-shop-form {
+            margin-top: 12px;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .add-shop-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .google-btn {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #f1f5f9;
+            border-radius: 12px;
+            background: white;
+            color: #374151;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .google-btn:hover {
+            border-color: #d1d5db;
+            background: #f9fafb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Ensure Google button is visible on mobile */
+        @media (max-width: 768px) {
+            .google-btn {
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+        
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e5e7eb;
+        }
+        
+        .divider span {
+            background: white;
+            padding: 0 16px;
+        }
+        
+        /* Mobile keyboard handling */
+        @media (max-width: 768px) {
+            .auth-container {
+                transition: transform 0.3s ease;
+            }
+            
+            /* Adjust layout when keyboard is open */
+            .mobile-device.keyboard-open .auth-container {
+                transform: translateY(-10vh);
+            }
+            
+            /* Ensure form is scrollable when keyboard is open */
+            .mobile-device .right-panel {
+              
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Better spacing for mobile forms */
+            .mobile-device .form-group:last-child {
+                margin-bottom: 20px;
+            }
+            
+            /* Improve button spacing on mobile */
+            .mobile-device .btn-primary {
+                margin-bottom: 16px;
+            }
+            
+            /* Better alert positioning on mobile */
+            .mobile-device .alert {
+                position: sticky;
+                top: 0;
+                z-index: 10;
+                margin-bottom: 16px;
+            }
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                background: linear-gradient(135deg, #7c9cc4 0%, #8db4d6 100%);
+            }
+            
+            .auth-container {
+                flex-direction: column;
+                max-width: 100%;
+                min-height: auto;
+                margin: 0;
+                border-radius: 16px;
+            }
+            
+            .left-panel {
+                display: none; /* Hide banner on mobile */
+            }
+            
+            .right-panel {
+                padding: 30px 20px;
+                order: 1;
+            }
+            
+            .form-header h3 {
+                font-size: 1.25rem;
+            }
+            
+            .form-toggle {
+                margin-bottom: 25px;
+            }
+            
+            .toggle-link {
+                font-size: 0.9rem;
+            }
+            
+            .form-control, .country-select {
+                padding: 14px 16px;
+                font-size: 16px; /* Prevents zoom on iOS */
+                border-radius: 10px;
+            }
+            
+            .phone-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .country-select {
+                width: 100%;
+            }
+            
+            .btn-primary {
+                padding: 14px;
+                font-size: 16px;
+                border-radius: 10px;
+            }
+            
+            .google-btn {
+                padding: 14px 16px;
+                font-size: 16px;
+                border-radius: 10px;
+                display: flex !important; /* Ensure visibility */
+            }
+            
+            .add-shop-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+            }
+            
+            .checkbox-group {
+                margin: 20px 0;
+            }
+            
+            .custom-checkbox {
+                width: 18px;
+                height: 18px;
+                min-width: 18px;
+                min-height: 18px;
+            }
+            
+            .checkbox-label {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .auth-container {
+                border-radius: 12px;
+            }
+            
+            .left-panel {
+                display: none; /* Ensure banner stays hidden on smaller mobile devices */
+            }
+            
+            .right-panel {
+                padding: 25px 15px;
+            }
+            
+            .form-header {
+                margin-bottom: 30px;
+            }
+            
+            .form-header h3 {
+                font-size: 1.15rem;
+            }
+            
+            .form-group {
+                margin-bottom: 16px;
+            }
+            
+            .form-control, .country-select {
+                padding: 12px 14px;
+                font-size: 16px;
+                border-radius: 8px;
+            }
+            
+            .btn-primary, .google-btn {
+                padding: 12px;
+                font-size: 15px;
+                border-radius: 8px;
+            }
+            
+            .google-btn {
+                display: flex !important; /* Ensure Google button is visible */
+            }
+            
+            .divider {
+                margin: 16px 0;
+                font-size: 0.85rem;
+            }
+            
+            .login-link {
+                font-size: 0.85rem;
+            }
+            
+            .alert {
+                padding: 10px 12px;
+                font-size: 0.85rem;
+                border-radius: 6px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .left-panel {
+                display: none; /* Ensure banner stays hidden on very small devices */
+            }
+            
+            .right-panel {
+                padding: 20px 12px;
+            }
+            
+            .form-control, .country-select {
+                padding: 10px 12px;
+                font-size: 16px;
+            }
+            
+            .btn-primary, .google-btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .google-btn {
+                display: flex !important; /* Ensure Google button is visible on very small screens */
+            }
+            
+            .form-header h3 {
+                font-size: 1.1rem;
+            }
+            
+            .left-content h2 {
+                font-size: 1rem;
+            }
+            
+            .left-content p {
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Touch-friendly improvements */
+        @media (hover: none) and (pointer: coarse) {
+            .form-control:focus, .country-select:focus {
+                transform: none; /* Remove transform on mobile focus */
+            }
+            
+            .btn-primary:hover, .google-btn:hover {
+                transform: none; /* Remove hover transforms on touch devices */
+            }
+            
+            .google-btn {
+                display: flex !important; /* Ensure Google button is always visible on touch devices */
+            }
+            
+            .toggle-link:hover {
+                background: rgba(59, 130, 246, 0.1);
+                border-radius: 4px;
+                padding: 4px 8px;
+                margin: -4px -8px;
+            }
+            
+            .password-toggle, .add-shop-btn {
+                min-width: 44px; /* Minimum touch target size */
+                min-height: 44px;
+            }
+            
+            .custom-checkbox {
+                min-width: 20px;
+                min-height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        
+        /* Landscape orientation on mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .auth-container {
+                flex-direction: row;
+                max-height: 90vh;
+            }
+            
+            .left-panel {
+                display: none; /* Keep banner hidden even in landscape mode on mobile */
+            }
+            
+            .right-panel {
+                flex: 1;
+                padding: 20px 15px;
+                overflow-y: auto;
+            }
+            
+            .form-header {
+                margin-bottom: 20px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <div class="brand-circle">
+                <div class="circle-bg"></div>
+                <div class="brand-logo">
+                    <i class="fas fa-business-time"></i>
+                </div>
+                
+                <!-- Country Flags -->
+                <div class="country-flag flag-1">🇺🇸</div>
+                <div class="country-flag flag-2">🇬🇧</div>
+                <div class="country-flag flag-3">🇩🇪</div>
+                <div class="country-flag flag-4">🇫🇷</div>
+                <div class="country-flag flag-5">🇮🇳</div>
+                <div class="country-flag flag-6">🇯🇵</div>
+                <div class="country-flag flag-7">🇨🇦</div>
+                <div class="country-flag flag-8">🇦🇺</div>
+            </div>
+            
+            <div class="left-content">
+                <h2>Manage Business Across<br>Multiple Locations</h2>
+                <p>Streamline your video editing and LED walls/drones/cameras business with our comprehensive management system and enjoy industry-leading features.</p>
+                
+                <div class="feature-dots">
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+            
+            <div class="form-header">
+                <h3 id="formTitle">Create Account</h3>
+                <div class="form-toggle">
+                    <a href="#" class="toggle-link" id="loginToggle" onclick="showLoginForm()">Log In</a>
+                    <a href="#" class="toggle-link active" id="registerToggle" onclick="showRegisterForm()">Sign Up</a>
+                </div>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginForm" style="display: none;">
+                <!-- Google Login Button -->
+                <button type="button" class="google-btn" onclick="googleLogin()">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+                
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <input type="email" class="form-control" id="loginEmail" placeholder="Enter your email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="password-group">
+                            <input type="password" class="form-control" id="loginPassword" placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">
+                                <i class="fas fa-eye" id="loginPasswordIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" id="loginBtn">
+                        <span id="loginBtnText">Log In</span>
+                        <span id="loginBtnLoading" style="display: none;">
+                            <span class="loading-spinner"></span>Logging in...
+                        </span>
+                    </button>
+                </form>
+                
+                <div class="login-link">
+                    Don't have an account? <a href="#" onclick="showRegisterForm()">Sign Up</a>
+                </div>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="registerForm">
+                <!-- Google Register Button -->
+                <button type="button" class="google-btn" onclick="googleLogin()">
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Sign up with Google
+                </button>
+                
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                
+                <form onsubmit="handleRegistration(event)">
+                    <div class="form-group">
+                        <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="phone-group">
+                            <select class="country-select" id="countryCode">
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+91" selected>🇮🇳 +91</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+86">🇨🇳 +86</option>
+                                <option value="+81">🇯🇵 +81</option>
+                                <option value="+49">🇩🇪 +49</option>
+                                <option value="+33">🇫🇷 +33</option>
+                                <option value="+39">🇮🇹 +39</option>
+                                <option value="+34">🇪🇸 +34</option>
+                                <option value="+7">🇷🇺 +7</option>
+                                <option value="+55">🇧🇷 +55</option>
+                                <option value="+61">🇦🇺 +61</option>
+                                <option value="+82">🇰🇷 +82</option>
+                                <option value="+65">🇸🇬 +65</option>
+                                <option value="+60">🇲🇾 +60</option>
+                                <option value="+66">🇹🇭 +66</option>
+                                <option value="+84">🇻🇳 +84</option>
+                                <option value="+62">🇮🇩 +62</option>
+                                <option value="+63">🇵🇭 +63</option>
+                                <option value="+971">🇦🇪 +971</option>
+                                <option value="+966">🇸🇦 +966</option>
+                            </select>
+                            <input type="tel" class="form-control" id="phone" placeholder="(201) 555-0123" required oninput="validatePhoneNumber(this)" pattern="[0-9\s\-\(\)]*">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="firstName" placeholder="First Name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="lastName" placeholder="Last Name" required>
+                    </div>
+                    
+                    <!-- Shop Selection -->
+                    <div class="form-group">
+                        <div class="shop-input-group">
+                            <select class="form-control" id="shopSelect" onchange="handleShopSelection()" required>
+                                <option value="">Select Shop/Business</option>
+                            </select>
+                            <button type="button" class="add-shop-btn" onclick="showAddShopForm()" title="Add New Shop">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Add New Shop Form -->
+                        <div id="addShopForm" class="add-shop-form" style="display: none;">
+                            <input type="text" class="form-control" id="newShopName" placeholder="Enter new shop/business name" style="margin-bottom: 0;">
+                            <div class="add-shop-actions">
+                                <button type="button" class="btn-sm btn-success" onclick="addNewShop()">
+                                    <i class="fas fa-check"></i> Add
+                                </button>
+                                <button type="button" class="btn-sm btn-secondary" onclick="cancelAddShop()">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Role Selection -->
+                    <div class="form-group">
+                        <select class="form-control" id="role" required onchange="handleRoleChange()">
+                            <option value="">Select Role</option>
+                            <option value="owner">Owner</option>
+                            <option value="worker">Worker</option>
+                            <option value="editor">Editor</option>
+                            <option value="worker_editor">Worker/Editor</option>
+                            <option value="transporter">Transporter</option>
+                            <option value="transporter_worker">Transporter/Worker</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="password-group">
+                            <input type="password" class="form-control" id="password" placeholder="Create password" required minlength="6" oninput="validatePasswordMatch()">
+                            <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                <i class="fas fa-eye" id="passwordIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="password-group">
+                            <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm password" required oninput="validatePasswordMatch()">
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                <i class="fas fa-eye" id="confirmPasswordIcon"></i>
+                            </button>
+                        </div>
+                        <div id="passwordMatchError" style="display: none; color: #ef4444; font-size: 0.85rem; margin-top: 5px;">
+                            <i class="fas fa-exclamation-circle"></i> Passwords do not match
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <div class="custom-checkbox" id="termsCheckbox" onclick="toggleCheckbox()">
+                            <i class="fas fa-check" style="display: none;"></i>
+                        </div>
+                        <label class="checkbox-label" onclick="toggleCheckbox()">
+                            Accept <a href="#">Legal Agreements</a>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" id="registerBtn" disabled>
+                        <span id="registerBtnText">Sign Up</span>
+                        <span id="registerBtnLoading" style="display: none;">
+                            <span class="loading-spinner"></span>Creating Account...
+                        </span>
+                    </button>
+                </form>
+                
+                <div class="login-link">
+                    Already Have an Account? <a href="#" onclick="showLoginForm()">Log In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAObvPEpdhdwwBEg3uIqlW-ik3v0FDmQvQ",
+            authDomain: "business-app-ef85c.firebaseapp.com",
+            projectId: "business-app-ef85c",
+            storageBucket: "business-app-ef85c.firebasestorage.app",
+            messagingSenderId: "743321495177",
+            appId: "1:743321495177:web:4ac910282972ee146e0858",
+            measurementId: "G-C5T7XMQQWK"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Google Auth Provider
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        
+        // API Base URL
+        const API_BASE = '/api';
+        let termsAccepted = false;
+        
+        // Initialize form on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is already logged in
+            const user = localStorage.getItem('user');
+            if (user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Load shops for dropdown
+            loadShops();
+            
+            // Mobile-specific improvements
+            if (isMobileDevice()) {
+                // Add mobile class for additional styling
+                document.body.classList.add('mobile-device');
+                
+                // Prevent zoom on input focus for iOS
+                const inputs = document.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.addEventListener('focus', function() {
+                        if (window.innerWidth < 768) {
+                            // Temporarily disable zoom
+                            const viewport = document.querySelector('meta[name=viewport]');
+                            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+                        }
+                    });
+                    
+                    input.addEventListener('blur', function() {
+                        if (window.innerWidth < 768) {
+                            // Re-enable zoom
+                            const viewport = document.querySelector('meta[name=viewport]');
+                            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+                        }
+                    });
+                });
+                
+                // Smooth scroll behavior for mobile
+                document.documentElement.style.scrollBehavior = 'smooth';
+            }
+            
+            // Handle orientation change
+            window.addEventListener('orientationchange', function() {
+                setTimeout(() => {
+                    window.scrollTo(0, 0);
+                }, 100);
+            });
+        });
+        
+        // Check if device is mobile
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   window.innerWidth <= 768;
+        }
+        
+        // Google Login Function
+        async function googleLogin() {
+            try {
+                const result = await auth.signInWithPopup(googleProvider);
+                const user = result.user;
+                
+                showAlert('Google login successful! Checking profile...', 'success');
+                
+                // Check if user profile exists in our database
+                await checkUserProfile(user);
+                
+            } catch (error) {
+                console.error('Google login error:', error);
+                showAlert('Google login failed: ' + error.message, 'danger');
+            }
+        }
+        
+        // Check if user profile is complete
+        async function checkUserProfile(user) {
+            try {
+                // First check Firebase Firestore
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                
+                if (userDoc.exists && userDoc.data().profileComplete) {
+                    // Profile exists and is complete in Firebase
+                    const userData = {
+                        _id: user.uid,
+                        ...userDoc.data()
+                    };
+                    
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    window.location.href = 'index.html';
+                } else {
+                    // Check if user exists in MongoDB
+                    const response = await fetch(`${API_BASE}/auth/user/${user.email}`);
+                    
+                    if (response.ok) {
+                        const mongoUser = await response.json();
+                        localStorage.setItem('user', JSON.stringify(mongoUser.user));
+                        window.location.href = 'index.html';
+                    } else {
+                        // First time user - show profile completion form
+                        showProfileCompletionForm(user);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking user profile:', error);
+                // First time user - show profile completion form
+                showProfileCompletionForm(user);
+            }
+        }
+        
+        // Show profile completion form for Google users
+        function showProfileCompletionForm(user) {
+            // Switch to register form and pre-fill data
+            showRegisterForm();
+            
+            // Pre-fill Google user data
+            document.getElementById('email').value = user.email;
+            document.getElementById('email').readOnly = true;
+            
+            const displayName = user.displayName || '';
+            const nameParts = displayName.split(' ');
+            document.getElementById('firstName').value = nameParts[0] || '';
+            document.getElementById('lastName').value = nameParts.slice(1).join(' ') || '';
+            
+            showAlert('Please complete your profile to continue', 'info');
+        }
+        
+        // Load shops from database
+        async function loadShops() {
+            try {
+                const shopSelect = document.getElementById('shopSelect');
+                
+                // Show loading state
+                shopSelect.innerHTML = '<option value="">Loading shops...</option>';
+                
+                const response = await fetch(`${API_BASE}/auth/shops`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const shops = await response.json();
+                
+                // Clear loading and add default option
+                shopSelect.innerHTML = '<option value="">Select Shop/Business</option>';
+                
+                // Add shops from database
+                if (shops && shops.length > 0) {
+                    shops.forEach(shop => {
+                        const option = document.createElement('option');
+                        option.value = shop.name;
+                        option.textContent = shop.name;
+                        shopSelect.appendChild(option);
+                    });
+                } else {
+                    // If no shops returned, add some defaults
+                    const defaultShops = ['Creative Studios', 'Event Productions', 'Digital Media House', 'Wedding Films Co.'];
+                    defaultShops.forEach(shop => {
+                        const option = document.createElement('option');
+                        option.value = shop;
+                        option.textContent = shop;
+                        shopSelect.appendChild(option);
+                    });
+                }
+                
+                console.log('Shops loaded successfully:', shops);
+            } catch (error) {
+                console.error('Error loading shops:', error);
+                
+                const shopSelect = document.getElementById('shopSelect');
+                shopSelect.innerHTML = '<option value="">Select Shop/Business</option>';
+                
+                // Add fallback shops if API fails
+                const fallbackShops = ['Creative Studios', 'Event Productions', 'Digital Media House', 'Wedding Films Co.'];
+                fallbackShops.forEach(shop => {
+                    const option = document.createElement('option');
+                    option.value = shop;
+                    option.textContent = shop;
+                    shopSelect.appendChild(option);
+                });
+                
+                showAlert('Could not load shops from server. Using defaults.', 'warning');
+            }
+        }
+        
+        // Form toggle functions
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('formTitle').textContent = 'Welcome Back';
+            
+            document.getElementById('loginToggle').classList.add('active');
+            document.getElementById('registerToggle').classList.remove('active');
+            
+            clearAlerts();
+        }
+        
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('formTitle').textContent = 'Create Account';
+            
+            document.getElementById('loginToggle').classList.remove('active');
+            document.getElementById('registerToggle').classList.add('active');
+            
+            clearAlerts();
+        }
+        
+        // Password toggle function
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(inputId + 'Icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+        
+        // Validate password match in real-time
+        function validatePasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('passwordMatchError');
+            const confirmInput = document.getElementById('confirmPassword');
+            
+            if (confirmPassword.length > 0) {
+                if (password !== confirmPassword) {
+                    errorDiv.style.display = 'block';
+                    confirmInput.style.borderColor = '#ef4444';
+                } else {
+                    errorDiv.style.display = 'none';
+                    confirmInput.style.borderColor = '#10b981';
+                }
+            } else {
+                errorDiv.style.display = 'none';
+                confirmInput.style.borderColor = '#f1f5f9';
+            }
+        }
+        
+        // Validate phone number input (only numbers, spaces, dashes, parentheses)
+        function validatePhoneNumber(input) {
+            // Remove any non-numeric characters except spaces, dashes, and parentheses
+            let value = input.value.replace(/[^0-9\s\-\(\)]/g, '');
+            
+            // Limit to reasonable phone number length
+            if (value.length > 15) {
+                value = value.substring(0, 15);
+            }
+            
+            input.value = value;
+        }
+        
+        // Checkbox toggle
+        function toggleCheckbox() {
+            const checkbox = document.getElementById('termsCheckbox');
+            const checkIcon = checkbox.querySelector('i');
+            const registerBtn = document.getElementById('registerBtn');
+            
+            termsAccepted = !termsAccepted;
+            
+            if (termsAccepted) {
+                checkbox.classList.add('checked');
+                checkIcon.style.display = 'block';
+                registerBtn.disabled = false;
+            } else {
+                checkbox.classList.remove('checked');
+                checkIcon.style.display = 'none';
+                registerBtn.disabled = true;
+            }
+        }
+        
+        // Login handler
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showAlert('Please fill in all fields', 'warning');
+                return;
+            }
+            
+            setLoadingState('login', true);
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    showAlert('Login successful!', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Login failed', 'danger');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('Network error. Please try again.', 'danger');
+            } finally {
+                setLoadingState('login', false);
+            }
+        }
+        
+        // Registration handler
+        async function handleRegistration(event) {
+            event.preventDefault();
+            
+            if (!termsAccepted) {
+                showAlert('Please accept the legal agreements', 'warning');
+                return;
+            }
+            
+            const formData = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('countryCode').value + document.getElementById('phone').value.trim(),
+                shopName: document.getElementById('shopSelect').value,
+                role: document.getElementById('role').value,
+                password: document.getElementById('password').value,
+                confirmPassword: document.getElementById('confirmPassword').value
+            };
+            
+            // Check if this is a Google user (email is readonly)
+            const isGoogleUser = document.getElementById('email').readOnly;
+            
+            // Validation
+            if (!validateRegistrationForm(formData, isGoogleUser)) {
+                return;
+            }
+            
+            setLoadingState('register', true);
+            
+            try {
+                const requestBody = {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    shopName: formData.shopName,
+                    role: formData.role
+                };
+                
+                // Only add password for non-Google users
+                if (!isGoogleUser) {
+                    requestBody.password = formData.password;
+                }
+                
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store user data and redirect
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    if (isGoogleUser) {
+                        // Also save to Firebase for Google users
+                        const currentUser = auth.currentUser;
+                        if (currentUser) {
+                            await db.collection('users').doc(currentUser.uid).set({
+                                ...data.user,
+                                firebaseUID: currentUser.uid,
+                                profileComplete: true,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        }
+                        
+                        showAlert('Profile completed successfully!', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1000);
+                    } else {
+                        showAlert('Registration successful! Please login.', 'success');
+                        
+                        // Clear form and switch to login
+                        document.getElementById('registerForm').querySelector('form').reset();
+                        termsAccepted = false;
+                        document.getElementById('termsCheckbox').classList.remove('checked');
+                        document.getElementById('termsCheckbox').querySelector('i').style.display = 'none';
+                        document.getElementById('registerBtn').disabled = true;
+                        
+                        setTimeout(() => {
+                            showLoginForm();
+                        }, 1500);
+                    }
+                } else {
+                    showAlert(data.message || 'Registration failed', 'danger');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showAlert('Network error. Please try again.', 'danger');
+            } finally {
+                setLoadingState('register', false);
+            }
+        }
+        
+        // Form validation
+        function validateRegistrationForm(data, isGoogleUser = false) {
+            if (!data.firstName) {
+                showAlert('First name is required', 'warning');
+                return false;
+            }
+            
+            if (!data.lastName) {
+                showAlert('Last name is required', 'warning');
+                return false;
+            }
+            
+            if (!data.email || !isValidEmail(data.email)) {
+                showAlert('Please enter a valid email', 'warning');
+                return false;
+            }
+            
+            if (!data.shopName) {
+                showAlert('Please select or add a shop/business', 'warning');
+                return false;
+            }
+            
+            if (!data.role) {
+                showAlert('Please select a role', 'warning');
+                return false;
+            }
+            
+            // Skip password validation for Google users
+            if (!isGoogleUser) {
+                if (!data.password || data.password.length < 6) {
+                    showAlert('Password must be at least 6 characters', 'warning');
+                    return false;
+                }
+                
+                if (data.password !== data.confirmPassword) {
+                    showAlert('Passwords do not match', 'warning');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        // Email validation
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // Set loading state
+        function setLoadingState(type, loading) {
+            const btn = document.getElementById(type + 'Btn');
+            const btnText = document.getElementById(type + 'BtnText');
+            const btnLoading = document.getElementById(type + 'BtnLoading');
+            
+            if (loading) {
+                btn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline';
+            } else {
+                btn.disabled = type === 'register' ? !termsAccepted : false;
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+            }
+        }
+        
+        // Shop selection handlers
+        function handleShopSelection() {
+            const shopSelect = document.getElementById('shopSelect');
+            const selectedShop = shopSelect.value;
+            const roleSelect = document.getElementById('role');
+            
+            if (selectedShop) {
+                // Hide add shop form if a shop is selected
+                document.getElementById('addShopForm').style.display = 'none';
+                
+                // Remove owner option from role dropdown since shop already exists
+                const ownerOption = roleSelect.querySelector('option[value="owner"]');
+                if (ownerOption) {
+                    ownerOption.style.display = 'none';
+                }
+                
+                // If owner was selected, reset to empty
+                if (roleSelect.value === 'owner') {
+                    roleSelect.value = '';
+                }
+                
+                // Show info message
+                showAlert('Selected existing shop. Owner role is not available for existing shops.', 'info');
+            } else {
+                // Show owner option again if no shop is selected
+                const ownerOption = roleSelect.querySelector('option[value="owner"]');
+                if (ownerOption) {
+                    ownerOption.style.display = 'block';
+                }
+            }
+        }
+        
+        // Handle role change to show/hide add shop button
+        function handleRoleChange() {
+            const selectedRole = document.getElementById('role').value;
+            const addShopBtn = document.querySelector('.add-shop-btn');
+            const shopSelect = document.getElementById('shopSelect');
+            
+            if (selectedRole === 'owner') {
+                // Only show add shop button if no existing shop is selected
+                if (!shopSelect.value) {
+                    addShopBtn.style.display = 'flex';
+                    addShopBtn.title = 'Add New Shop (Owner only)';
+                } else {
+                    // If a shop is already selected, owner role is not allowed
+                    showAlert('Cannot select Owner role for existing shops. Please create a new shop or choose a different role.', 'warning');
+                    document.getElementById('role').value = '';
+                }
+            } else {
+                addShopBtn.style.display = 'none';
+                // Hide add shop form if it's open
+                document.getElementById('addShopForm').style.display = 'none';
+            }
+        }
+        
+        function showAddShopForm() {
+            const addShopForm = document.getElementById('addShopForm');
+            const shopSelect = document.getElementById('shopSelect');
+            
+            shopSelect.value = '';
+            addShopForm.style.display = 'block';
+            
+            // Focus with delay on mobile to prevent keyboard issues
+            if (isMobileDevice()) {
+                setTimeout(() => {
+                    document.getElementById('newShopName').focus();
+                }, 100);
+            } else {
+                document.getElementById('newShopName').focus();
+            }
+        }
+        
+        function addNewShop() {
+            const newShopName = document.getElementById('newShopName').value.trim();
+            const selectedRole = document.getElementById('role').value;
+            
+            if (!newShopName) {
+                showAlert('Please enter a shop/business name', 'warning');
+                return;
+            }
+            
+            // Only allow owners to create new shops
+            if (selectedRole !== 'owner') {
+                showAlert('Only owners can create new shops. Please select "Owner" role or choose an existing shop.', 'warning');
+                return;
+            }
+            
+            const shopSelect = document.getElementById('shopSelect');
+            
+            // Check if shop already exists in dropdown
+            const existingOptions = Array.from(shopSelect.options);
+            const exists = existingOptions.some(option => 
+                option.value.toLowerCase() === newShopName.toLowerCase()
+            );
+            
+            if (exists) {
+                showAlert('This shop/business name already exists. Please choose a different name or select the existing shop.', 'warning');
+                return;
+            }
+            
+            // Show loading state
+            const addBtn = document.querySelector('#addShopForm .btn-success');
+            const originalText = addBtn.innerHTML;
+            addBtn.innerHTML = '<span class="loading-spinner"></span> Adding...';
+            addBtn.disabled = true;
+            
+            // Get owner details
+            const ownerEmail = document.getElementById('email').value.trim();
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const ownerName = `${firstName} ${lastName}`.trim();
+            
+            // Create shop via API
+            fetch(`${API_BASE}/auth/shops`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: newShopName,
+                    businessType: 'mixed',
+                    ownerEmail: ownerEmail,
+                    ownerName: ownerName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.shop) {
+                    // Add new option to dropdown
+                    const newOption = document.createElement('option');
+                    newOption.value = data.shop.name;
+                    newOption.textContent = data.shop.name;
+                    newOption.selected = true;
+                    shopSelect.appendChild(newOption);
+                    
+                    // Hide form and clear input
+                    document.getElementById('addShopForm').style.display = 'none';
+                    document.getElementById('newShopName').value = '';
+                    
+                    showAlert('Shop/Business created successfully! You are now the owner.', 'success');
+                } else if (data.shopExists) {
+                    // Shop already exists
+                    showAlert(data.message || 'This shop name is already taken. Please choose a different name.', 'warning');
+                    
+                    // Don't hide form, let user try a different name
+                    document.getElementById('newShopName').focus();
+                } else {
+                    showAlert(data.message || 'Failed to add shop', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding shop:', error);
+                showAlert('Network error. Please try again.', 'danger');
+            })
+            .finally(() => {
+                // Reset button
+                addBtn.innerHTML = originalText;
+                addBtn.disabled = false;
+            });
+        }
+        
+        function cancelAddShop() {
+            document.getElementById('addShopForm').style.display = 'none';
+            document.getElementById('newShopName').value = '';
+        }
+        
+        // Show alert function with mobile optimization
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                clearAlerts();
+            }, 5000);
+            
+            // Scroll to alert on mobile
+            if (isMobileDevice()) {
+                alertContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+        
+        // Clear alerts
+        function clearAlerts() {
+            document.getElementById('alertContainer').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

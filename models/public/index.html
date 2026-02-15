@@ -1001,7 +1001,8 @@
                     // Convert line breaks to HTML and preserve formatting
                     displayMessage = displayMessage
                         .replace(/\n\n/g, '<br><br>')
-                        .replace(/\n/g, '<br>');
+                        .replace(/\n/g, '<br>')
+                        .replace(/👤|📍|💰|👷|🚛|🎥|⚠️/g, '<br>$&'); // Add line breaks before emojis for better formatting
                     
                     // Create expandable content for long messages
                     let messageHTML = '';
@@ -1009,7 +1010,8 @@
                         const shortMessage = alert.message.substring(0, 200) + '...';
                         const shortDisplayMessage = shortMessage
                             .replace(/\n\n/g, '<br><br>')
-                            .replace(/\n/g, '<br>');
+                            .replace(/\n/g, '<br>')
+                            .replace(/👤|📍|💰|👷|🚛|🎥|⚠️/g, '<br>$&');
                         
                         messageHTML = `
                             <div class="alert-message-short" style="color: #64748b; font-size: 0.9rem; line-height: 1.6;">

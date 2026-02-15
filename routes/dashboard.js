@@ -33,7 +33,7 @@ router.get('/alerts', async (req, res) => {
         }).populate('client', 'name phone')
           .populate('workers.worker', 'firstName lastName phone')
           .populate('transporters.transporter', 'firstName lastName phone')
-          .select('orderName description clientName orderDate totalAmount receivedPayment status venuePlace workers transporters')
+          .select('orderName description clientName orderDate totalAmount receivedPayment status venuePlace workers transporters products')
           .lean();
         
         // Get projects ending today (using endDate as deadline)
@@ -58,9 +58,18 @@ router.get('/alerts', async (req, res) => {
             const workers = order.workers?.map(w => w.worker ? `${w.worker.firstName} ${w.worker.lastName}` : 'Unknown Worker').join(', ') || 'No workers assigned';
             const transporters = order.transporters?.map(t => t.transporter ? `${t.transporter.firstName} ${t.transporter.lastName}` : 'Unknown Transporter').join(', ') || 'No transporters assigned';
             
+            // Get products list
+            let productsText = '';
+            if (order.products && order.products.length > 0) {
+              productsText = '\n📦 Products:\n' + order.products.map(product => {
+                const quantityDisplay = product.sizeInfo || `Qty: ${product.quantity}`;
+                return `   • ${product.name} - ${quantityDisplay} @ ₹${product.price.toLocaleString()}`;
+              }).join('\n');
+            }
+            
             return `📦 ${order.orderName || order.description}
-            👤 Client: ${clientName} | 📍 Venue: ${order.venuePlace || 'N/A'}
-            💰 Remaining: ₹${remainingAmount.toLocaleString()}
+            👤 Client: ${clientName} | � Venue: ${order.venuePlace || 'N/A'}
+            💰 Remaining: ₹${remainingAmount.toLocaleString()}${productsText}
             👷 Workers: ${workers}
             🚛 Transporters: ${transporters}
             📅 Due Today: ${new Date(order.orderDate).toLocaleDateString()}`;
@@ -240,7 +249,7 @@ router.get('/alerts', async (req, res) => {
           }).populate('client', 'name phone')
             .populate('workers.worker', 'firstName lastName phone')
             .populate('transporters.transporter', 'firstName lastName phone')
-            .select('orderName description clientName orderDate totalAmount venuePlace status workers transporters')
+            .select('orderName description clientName orderDate totalAmount venuePlace status workers transporters products')
             .lean();
           
           console.log(`📦 Found ${userOrders.length} orders due today for user ${userObjectId}`);
@@ -270,9 +279,18 @@ router.get('/alerts', async (req, res) => {
               const allWorkers = order.workers?.map(w => w.worker ? `${w.worker.firstName} ${w.worker.lastName}` : 'Unknown Worker').join(', ') || 'No workers';
               const allTransporters = order.transporters?.map(t => t.transporter ? `${t.transporter.firstName} ${t.transporter.lastName}` : 'Unknown Transporter').join(', ') || 'No transporters';
               
+              // Get products list
+              let productsText = '';
+              if (order.products && order.products.length > 0) {
+                productsText = '\n📦 Products:\n' + order.products.map(product => {
+                  const quantityDisplay = product.sizeInfo || `Qty: ${product.quantity}`;
+                  return `   • ${product.name} - ${quantityDisplay} @ ₹${product.price.toLocaleString()}`;
+                }).join('\n');
+              }
+              
               return `📦 ORDER: ${order.orderName || order.description || 'Unnamed Order'}
 👤 Client: ${clientName}
-📍 Venue: ${order.venuePlace || 'Not specified'}
+📍 Venue: ${order.venuePlace || 'Not specified'}${productsText}
 👷 Team Workers: ${allWorkers}
 🚛 Team Transporters: ${allTransporters}
 📅 Due TODAY: ${new Date(order.orderDate).toLocaleDateString()}
