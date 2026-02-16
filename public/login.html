@@ -1111,8 +1111,8 @@
         // Google Auth Provider
         const googleProvider = new firebase.auth.GoogleAuthProvider();
         
-        // API Base URL
-        const API_BASE = '/api';
+        // API Base URL - Use full URL for Cordova WebView
+        const API_BASE = 'https://manageroffice.onrender.com/api';
         let termsAccepted = false;
         
         // Initialize form on page load
@@ -1173,14 +1173,39 @@
         // Google Login Function
         async function googleLogin() {
             try {
-                const result = await auth.signInWithPopup(googleProvider);
-                const user = result.user;
-                
-                showAlert('Google login successful! Checking profile...', 'success');
-                
-                // Check if user profile exists in our database
-                await checkUserProfile(user);
-                
+                // Check if running in Cordova - use native Google Sign-In
+                if (window.cordova && window.plugins && window.plugins.googleplus) {
+                    // Use Cordova Google Plus plugin for native sign-in
+                    window.plugins.googleplus.login(
+                        {
+                            'webClientId': '743321495177-cn4mlj5hglhv9206sv6d90fja4hgq153.apps.googleusercontent.com',
+                            'offline': true
+                        },
+                        async function (user) {
+                            console.log('Google Sign-In Success:', user);
+                            
+                            // Sign in to Firebase with the Google credential
+                            const credential = firebase.auth.GoogleAuthProvider.credential(user.idToken);
+                            const result = await auth.signInWithCredential(credential);
+                            
+                            showAlert('Google login successful! Checking profile...', 'success');
+                            await checkUserProfile(result.user);
+                        },
+                        function (error) {
+                            console.error('Google Sign-In Error:', error);
+                            showAlert('Google login failed: ' + error, 'danger');
+                        }
+                    );
+                } else {
+                    // Web browser - use popup
+                    const result = await auth.signInWithPopup(googleProvider);
+                    const user = result.user;
+                    
+                    showAlert('Google login successful! Checking profile...', 'success');
+                    
+                    // Check if user profile exists in our database
+                    await checkUserProfile(user);
+                }
             } catch (error) {
                 console.error('Google login error:', error);
                 showAlert('Google login failed: ' + error.message, 'danger');
